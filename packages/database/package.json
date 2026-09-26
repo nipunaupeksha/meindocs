@@ -1,0 +1,29 @@
+{
+  "name": "@meindocs/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./relations": "./src/relations.ts",
+    "./client": "./src/client.ts",
+    "./repositories": "./src/repositories.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json",
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config drizzle.config.ts",
+    "db:push": "drizzle-kit push --config drizzle.config.ts"
+  },
+  "dependencies": {
+    "@meindocs/domain": "workspace:*",
+    "drizzle-orm": "^0.44.7"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "better-sqlite3": "^13.0.3",
+    "drizzle-kit": "^0.31.5"
+  }
+}

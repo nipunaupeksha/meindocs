@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "MeinDocs",
+    "slug": "meindocs",
+    "scheme": "meindocs",
+    "version": "0.0.0",
+    "plugins": ["expo-router", "expo-font"],
+    "userInterfaceStyle": "light"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "entry": ["apps/api/src/server.ts", "apps/mobile/babel.config.cjs"],
+  "ignoreDependencies": [
+    "react-native-reanimated",
+    "react-native-worklets",
+    "react-native-css-interop",
+    "@babel/plugin-transform-react-jsx",
+    "better-sqlite3"
+  ],
+  "publicPackages": [
+    "@meindocs/domain",
+    "@meindocs/schemas",
+    "@meindocs/config",
+    "@meindocs/ui",
+    "@meindocs/database"
+  ]
+}

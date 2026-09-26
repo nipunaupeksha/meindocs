@@ -1,0 +1,16 @@
+{
+  "name": "@meindocs/schemas",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "dependencies": {
+    "@meindocs/domain": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}
