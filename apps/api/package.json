@@ -9,6 +9,7 @@
     "typecheck": "tsc --project tsconfig.json"
   },
   "dependencies": {
+    "@meindocs/domain": "workspace:*",
     "@meindocs/schemas": "workspace:*",
     "fastify": "^5.12.5",
     "zod": "^4.6.5"

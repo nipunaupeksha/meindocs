@@ -35,6 +35,32 @@ export enum DocumentStatus {
   Deleted = 'deleted',
 }
 
+export enum DocumentRelationType {
+  GenerationFrom = 'generation_from',
+  GeneratedFrom = 'generated_from',
+}
+
+export enum PersonRelationship {
+  Self = 'self',
+  Spouse = 'spouse',
+  Child = 'child',
+  Dependent = 'dependent',
+  Other = 'other',
+}
+
+export enum OrganisationType {
+  Government = 'government',
+  Employer = 'employer',
+  Landlord = 'landlord',
+  Insurance = 'insurance',
+  Bank = 'bank',
+  Utility = 'utility',
+  Healthcare = 'healthcare',
+  Business = 'business',
+  Education = 'education',
+  Other = 'other',
+}
+
 export enum ActionType {
   Upload = 'upload',
   Scan = 'scan',
@@ -57,13 +83,25 @@ export enum PaymentStatus {
 }
 
 export enum CaseType {
+  Immigration = 'immigration',
   General = 'general',
   Tax = 'tax',
   Insurance = 'insurance',
   Housing = 'housing',
   Employment = 'employment',
   Legal = 'legal',
+  Family = 'family',
+  Vehicle = 'vehicle',
+  Custom = 'custom',
   Other = 'other',
+}
+
+export enum CaseStatus {
+  Open = 'open',
+  ActionRequired = 'action_required',
+  Waiting = 'waiting',
+  Completed = 'completed',
+  Archived = 'archived',
 }
 
 export enum TaxCategory {
@@ -77,6 +115,12 @@ export enum TaxCategory {
   Education = 'education',
   Donation = 'donation',
   Other = 'other',
+}
+
+export enum TaxReviewStatus {
+  NeedsReview = 'needs_review',
+  Reviewed = 'reviewed',
+  Rejected = 'rejected',
 }
 
 export interface DocumentCapabilities {
@@ -94,6 +138,14 @@ export interface Person {
   lastName: string;
   email?: string;
   phone?: string;
+  preferredName?: string;
+  dateOfBirth?: string;
+  relationship: PersonRelationship;
+  addresses: string[];
+  nationality?: string;
+  identifiersEncrypted?: string;
+  documentIds: string[];
+  caseIds: string[];
 }
 
 export interface Organisation {
@@ -104,13 +156,29 @@ export interface Organisation {
   taxNumber?: string;
   email?: string;
   phone?: string;
+  type: OrganisationType;
+  address?: string;
+  website?: string;
+  customerReference?: string;
+  documentIds: string[];
+  caseIds: string[];
+  paymentIds: string[];
+  actionIds: string[];
 }
 
 export interface TaxMetadata {
   category: TaxCategory;
+  taxRelevant?: boolean;
+  expenseCategory?: TaxCategory;
   taxYear?: number;
   deductible?: boolean;
   deductibleAmount?: number;
+  netAmount?: number;
+  vatAmount?: number;
+  grossAmount?: number;
+  vatRate?: number;
+  businessUsePercent?: number;
+  reviewStatus?: TaxReviewStatus;
   notes?: string;
 }
 
@@ -146,6 +214,13 @@ export interface Document {
   mimeType?: string;
   fileSizeBytes?: number;
   storageUri?: string;
+  sha256?: string;
+  thumbnailUri?: string;
+  pageCount?: number;
+  ocrText?: string;
+  summary?: string;
+  referenceNumber?: string;
+  generatedFromTemplate?: string;
   issuer?: Person | Organisation;
   recipient?: Person | Organisation;
   capabilities: DocumentCapabilities;
@@ -159,12 +234,45 @@ export interface Case {
   id: string;
   type: CaseType;
   title: string;
-  status: 'open' | 'closed' | 'archived';
+  status: CaseStatus;
   createdAt: string;
   updatedAt: string;
   documentIds: string[];
   owner?: Person;
   organisation?: Organisation;
+  description?: string;
+  deadline?: string;
+  actionIds: string[];
+  personIds: string[];
+  organisationIds: string[];
+  checklist: CaseChecklistItem[];
+  timeline: CaseTimelineEvent[];
+}
+
+export interface CaseChecklistItem {
+  id: string;
+  caseId: string;
+  title: string;
+  completed: boolean;
+  dueDate?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface CaseTimelineEvent {
+  id: string;
+  caseId: string;
+  type: string;
+  label: string;
+  createdAt: string;
+  note?: string;
 }
 
 export * from './repositories';
+export * from './backup';
+export * from './case-service';
+export * from './document-generator';
+export * from './people-organisations-service';
+export * from './dashboard';
+export * from './export';
+export * from './errors';

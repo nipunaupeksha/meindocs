@@ -40,7 +40,12 @@ function DetailContent({ document }: { document: MockDocument }) {
           tone={document.reviewed ? 'success' : 'warning'}
         />
       </View>
-      <PdfPreview title={document.title[language]} issuer={document.issuer} />
+      <PdfPreview
+        title={document.title[language]}
+        issuer={document.issuer}
+        thumbnailUri={document.thumbnailUri}
+        localUri={document.localUri}
+      />
       <SectionHeader title={t('At a glance', 'Auf einen Blick')} />
       <Card>
         <InfoRow label={t('Sender', 'Absender')} value={document.issuer} />
@@ -74,6 +79,20 @@ function DetailContent({ document }: { document: MockDocument }) {
         }
       >
         <Text>{t('Create a reminder', 'Erinnerung erstellen')}</Text>
+      </Button>
+      <Button
+        variant="outline"
+        onPress={() =>
+          router.push({ pathname: '/generate-document', params: { documentId: document.id } })
+        }
+      >
+        <Text>{t('Generate a formal document', 'Formelles Dokument erstellen')}</Text>
+      </Button>
+      <Button
+        variant="outline"
+        onPress={() => router.push({ pathname: '/export', params: { documentId: document.id } })}
+      >
+        <Text>{t('Export and share', 'Exportieren und teilen')}</Text>
       </Button>
     </Page>
   );

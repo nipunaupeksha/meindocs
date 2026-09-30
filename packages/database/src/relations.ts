@@ -2,6 +2,11 @@ import { relations } from 'drizzle-orm';
 import {
   actions,
   caseDocuments,
+  caseActions,
+  casePeople,
+  caseOrganisations,
+  caseChecklistItems,
+  caseTimeline,
   cases,
   documentRelations,
   documentTags,
@@ -120,6 +125,11 @@ export const casesRelations = relations(cases, ({ one, many }) => ({
     references: [organisations.id],
   }),
   documents: many(caseDocuments),
+  actions: many(caseActions),
+  people: many(casePeople),
+  organisations: many(caseOrganisations),
+  checklist: many(caseChecklistItems),
+  timeline: many(caseTimeline),
 }));
 
 export const caseDocumentsRelations = relations(caseDocuments, ({ one }) => ({
@@ -130,6 +140,22 @@ export const caseDocumentsRelations = relations(caseDocuments, ({ one }) => ({
   document: one(documents, {
     fields: [caseDocuments.documentId],
     references: [documents.id],
+  }),
+}));
+
+export const caseActionsRelations = relations(caseActions, ({ one }) => ({
+  case: one(cases, { fields: [caseActions.caseId], references: [cases.id] }),
+  action: one(actions, { fields: [caseActions.actionId], references: [actions.id] }),
+}));
+export const casePeopleRelations = relations(casePeople, ({ one }) => ({
+  case: one(cases, { fields: [casePeople.caseId], references: [cases.id] }),
+  person: one(people, { fields: [casePeople.personId], references: [people.id] }),
+}));
+export const caseOrganisationsRelations = relations(caseOrganisations, ({ one }) => ({
+  case: one(cases, { fields: [caseOrganisations.caseId], references: [cases.id] }),
+  organisation: one(organisations, {
+    fields: [caseOrganisations.organisationId],
+    references: [organisations.id],
   }),
 }));
 

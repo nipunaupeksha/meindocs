@@ -11,13 +11,15 @@ export default function CreateReminderScreen() {
   const { t, language, documents, addTask } = usePreview();
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('2026-09-30');
+  const [expiryDate, setExpiryDate] = useState('');
   const [linked, setLinked] = useState(readRouteId(params.documentId) ?? 'none');
   const [priority, setPriority] = useState<'normal' | 'high'>('normal');
   const [error, setError] = useState(false);
   const [saved, setSaved] = useState(false);
   const documentId = documents.find((item) => item.id === linked)?.id;
+  // fallow-ignore-next-line complexity
   function save() {
-    if (!title.trim() || !validDate(date)) {
+    if (!title.trim() || !validDate(date) || (expiryDate.length > 0 && !validDate(expiryDate))) {
       setError(true);
       return;
     }
@@ -25,6 +27,7 @@ export default function CreateReminderScreen() {
     addTask({
       title: { en: title.trim(), de: title.trim() },
       date,
+      expiryDate: expiryDate || undefined,
       priority,
       documentId,
     });
@@ -45,6 +48,14 @@ export default function CreateReminderScreen() {
         onChangeText={setTitle}
         placeholder={t('e.g. Review insurance renewal', 'z. B. Versicherungsverlängerung prüfen')}
         maxLength={120}
+      />
+      <Field
+        label={t('Expiry date · optional', 'Ablaufdatum · optional')}
+        value={expiryDate}
+        onChangeText={setExpiryDate}
+        placeholder="2026-10-05"
+        autoCorrect={false}
+        maxLength={10}
       />
       <Field
         label={t('Due date · YYYY-MM-DD', 'Fällig am · JJJJ-MM-TT')}
@@ -75,8 +86,8 @@ export default function CreateReminderScreen() {
       {error && (
         <Text accessibilityRole="alert" className="text-danger">
           {t(
-            'Enter a title and a valid date in YYYY-MM-DD format.',
-            'Bitte einen Titel und ein gültiges Datum im Format JJJJ-MM-TT eingeben.',
+            'Enter a title, due date, and optional expiry date in YYYY-MM-DD format.',
+            'Bitte Titel, Fälligkeitsdatum und optionales Ablaufdatum im Format JJJJ-MM-TT eingeben.',
           )}
         </Text>
       )}
@@ -85,8 +96,8 @@ export default function CreateReminderScreen() {
       </Button>
       <Text className="text-sm text-muted-foreground">
         {t(
-          'Saved in this preview only. No system notification is scheduled.',
-          'Wird nur in dieser Vorschau gespeichert. Es wird keine Systemmitteilung geplant.',
+          'The reminder is saved and a local notification is scheduled when permissions are granted.',
+          'Die Erinnerung wird gespeichert und bei erteilter Berechtigung lokal geplant.',
         )}
       </Text>
     </Page>

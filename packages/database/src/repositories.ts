@@ -1,4 +1,4 @@
-import { and, desc, eq, like, type InferSelectModel, type SQL } from 'drizzle-orm';
+import { and, desc, eq, like, sql, type InferSelectModel, type SQL } from 'drizzle-orm';
 import type {
   CreateDocumentInput,
   CreateReminderInput,
@@ -14,6 +14,7 @@ import type {
   UpdateReminderInput,
 } from '@meindocs/domain';
 import { actions, caseDocuments, documents, reminders } from './schema';
+import { syncDocumentSearchIndex } from './search';
 
 type DocumentRow = InferSelectModel<typeof documents>;
 type ReminderRow = InferSelectModel<typeof reminders>;
@@ -64,6 +65,13 @@ function toDocument(row: DocumentRow): Document {
     mimeType: optional(row.mimeType),
     fileSizeBytes: optional(row.fileSizeBytes),
     storageUri: optional(row.storageUri),
+    sha256: optional(row.sha256),
+    thumbnailUri: optional(row.thumbnailUri),
+    pageCount: optional(row.pageCount),
+    ocrText: optional(row.ocrText),
+    summary: optional(row.summary),
+    referenceNumber: optional(row.referenceNumber),
+    generatedFromTemplate: optional(row.generatedFromTemplate),
     capabilities: {
       canEdit: row.canEdit,
       canDelete: row.canDelete,
@@ -81,8 +89,11 @@ function toReminder(row: ReminderRow): Reminder {
     documentId: optional(row.documentId),
     title: row.title,
     dueDate: row.dueDate,
+    expiryDate: optional(row.expiryDate),
     priority: row.priority,
     completed: row.completed,
+    completedAt: optional(row.completedAt),
+    notificationId: optional(row.notificationId),
     notes: optional(row.notes),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -143,9 +154,17 @@ export class SqliteDocumentRepository implements DocumentRepository {
         mimeType: input.mimeType,
         fileSizeBytes: input.fileSizeBytes,
         storageUri: input.storageUri,
+        sha256: input.sha256,
+        thumbnailUri: input.thumbnailUri,
+        pageCount: input.pageCount,
+        ocrText: input.ocrText,
+        summary: input.summary,
+        referenceNumber: input.referenceNumber,
+        generatedFromTemplate: input.generatedFromTemplate,
         ...input.capabilities,
       })
       .returning();
+    await syncDocumentSearchIndex(this.db, row.id);
     return toDocument(row);
   }
 
@@ -157,6 +176,16 @@ export class SqliteDocumentRepository implements DocumentRepository {
       ...capabilities,
     };
     await this.db.update(documents).set(values).where(eq(documents.id, documentId));
+    await syncDocumentSearchIndex(this.db, documentId);
+  }
+
+  async delete(documentId: string) {
+    await this.db.delete(documents).where(eq(documents.id, documentId));
+    await this.db.run(
+      sql.raw(
+        `DELETE FROM documents_fts WHERE document_id = '${documentId.replaceAll("'", "''")}'`,
+      ),
+    );
   }
 }
 
@@ -191,6 +220,7 @@ export class SqliteReminderRepository implements ReminderRepository {
         documentId: input.documentId,
         title: input.title,
         dueDate: input.dueDate,
+        expiryDate: input.expiryDate,
         priority: input.priority ?? 'normal',
         notes: input.notes,
         createdAt: timestamp,
@@ -201,9 +231,10 @@ export class SqliteReminderRepository implements ReminderRepository {
   }
 
   async update(reminderId: string, input: UpdateReminderInput) {
+    const completedAt = input.completed === true ? (input.completedAt ?? now()) : input.completedAt;
     await this.db
       .update(reminders)
-      .set({ ...input, updatedAt: input.updatedAt ?? now() })
+      .set({ ...input, completedAt, updatedAt: input.updatedAt ?? now() })
       .where(eq(reminders.id, reminderId));
   }
 }

@@ -6,10 +6,16 @@ import { Text } from '@/components/ui/text';
 import { EmptyState } from '@/components/app/empty-state';
 import { usePreview } from '@/features/preview/provider';
 import { Metric, Options, Page, TaskItem } from '@/features/preview/ui';
+import { reminderState } from '@/features/reminders/status';
 export default function TasksScreen() {
   const { t, tasks } = usePreview();
   const [filter, setFilter] = useState('open');
   const open = tasks.filter((task) => !task.done);
+  const overdue = open.filter(
+    (task) =>
+      reminderState({ dueDate: task.date, expiryDate: task.expiryDate, completed: task.done }) ===
+      'overdue',
+  );
   const visible = tasks.filter(
     (task) => filter === 'all' || (filter === 'done' ? task.done : !task.done),
   );
@@ -24,6 +30,11 @@ export default function TasksScreen() {
           icon="time-outline"
           value={String(open.length)}
           label={t('To do', 'Zu erledigen')}
+        />
+        <Metric
+          icon="alert-circle-outline"
+          value={String(overdue.length)}
+          label={t('Overdue', 'Überfällig')}
         />
         <Metric
           icon="checkmark-circle-outline"

@@ -1,5 +1,17 @@
 {
-  "entry": ["apps/api/src/server.ts", "apps/mobile/babel.config.cjs"],
+  "entry": [
+    "apps/api/src/server.ts",
+    "apps/mobile/babel.config.cjs",
+    "apps/mobile/src/features/preview/local-search.test.ts",
+    "packages/domain/src/case-service.test.ts",
+    "packages/domain/src/document-generator.test.ts",
+    "apps/mobile/app/document/generated.tsx",
+    "packages/database/src/people-organisations.test.ts",
+    "apps/mobile/src/features/security/state.test.ts",
+    "packages/domain/src/dashboard.test.ts",
+    "packages/domain/src/export.test.ts",
+    "packages/domain/src/errors.test.ts"
+  ],
   "ignoreDependencies": [
     "react-native-reanimated",
     "react-native-worklets",

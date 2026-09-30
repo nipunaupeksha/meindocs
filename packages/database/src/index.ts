@@ -2,3 +2,8 @@ export * from './schema';
 export * from './relations';
 export * from './client';
 export * from './repositories';
+export * from './search';
+export * from './case-repository';
+export * from './generated-documents';
+export * from './people-organisations';
+export * from './dashboard';

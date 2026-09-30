@@ -4,7 +4,28 @@
     "slug": "meindocs",
     "scheme": "meindocs",
     "version": "0.0.0",
-    "plugins": ["expo-router", "expo-font"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-document-picker",
+      "expo-image-picker",
+      "expo-notifications",
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow MeinDocs to use Face ID to protect your documents."
+        }
+      ],
+      [
+        "rn-mlkit-ocr",
+        {
+          "ocrModels": ["latin"],
+          "ocrUseBundled": true
+        }
+      ],
+      "expo-web-browser"
+    ],
     "userInterfaceStyle": "light"
   }
 }

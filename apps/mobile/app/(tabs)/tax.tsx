@@ -10,8 +10,9 @@ import { usePreview } from '@/features/preview/provider';
 import { money, formatDate } from '@/features/preview/data';
 import { Icon, Options, Page } from '@/features/preview/ui';
 export default function TaxScreen() {
-  const { t, language, documents, notify } = usePreview();
+  const { t, language, documents } = usePreview();
   const [filter, setFilter] = useState('all');
+  const [year, setYear] = useState('all');
   const receipts = documents.filter((item) => item.amount !== undefined);
   const total = receipts.reduce((sum, item) => sum + (item.amount ?? 0), 0);
   const reviewed = receipts.filter((item) => item.reviewed).length;
@@ -61,8 +62,21 @@ export default function TaxScreen() {
           { value: 'review', label: t('Needs review', 'Zu prüfen') },
         ]}
       />
+      <Options
+        value={year}
+        onChange={setYear}
+        options={[
+          { value: 'all', label: t('All years', 'Alle Jahre') },
+          { value: '2026', label: '2026' },
+        ]}
+      />
       {receipts
         .filter((item) => filter === 'all' || !item.reviewed)
+        .filter(
+          (item) =>
+            year === 'all' || (item.tax?.taxYear ?? Number(item.date.slice(0, 4))) === Number(year),
+        )
+        // fallow-ignore-next-line complexity
         .map((item) => (
           <Pressable
             key={item.id}
@@ -81,24 +95,29 @@ export default function TaxScreen() {
               </View>
               <Text className="text-sm text-muted-foreground">{item.title[language]}</Text>
               <StatusBadge
-                tone={item.reviewed ? 'success' : 'warning'}
-                label={item.reviewed ? t('Reviewed', 'Geprüft') : t('Needs review', 'Zu prüfen')}
+                tone={
+                  item.tax?.reviewStatus === 'reviewed' || item.reviewed ? 'success' : 'warning'
+                }
+                label={
+                  item.tax?.reviewStatus === 'reviewed' || item.reviewed
+                    ? t('Reviewed', 'Geprüft')
+                    : t('Needs review', 'Zu prüfen')
+                }
               />
+              {item.tax ? (
+                <Text className="text-xs text-muted-foreground">
+                  {item.tax.expenseCategory ?? t('Tax category pending', 'Steuerkategorie offen')} ·{' '}
+                  {t('VAT', 'USt.')} {item.tax.vatAmount ?? '—'} ·{' '}
+                  {t('Business use', 'Betriebliche Nutzung')} {item.tax.businessUsePercent ?? '—'}%
+                </Text>
+              ) : null}
             </Card>
           </Pressable>
         ))}
       {filter === 'review' && reviewed === receipts.length && (
         <Text>{t('All receipts reviewed.', 'Alle Belege sind geprüft.')}</Text>
       )}
-      <Button
-        variant="outline"
-        onPress={() =>
-          notify(
-            'Export preview prepared · no file created',
-            'Exportvorschau vorbereitet · keine Datei erstellt',
-          )
-        }
-      >
+      <Button variant="outline" onPress={() => router.push('/export?mode=tax')}>
         <Text>{t('Preview tax export', 'Steuerexport ansehen')}</Text>
       </Button>
     </Page>

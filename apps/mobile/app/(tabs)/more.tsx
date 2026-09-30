@@ -24,6 +24,12 @@ export default function MoreScreen() {
         </Text>
       </Card>
       <ActionTile
+        icon="folder-outline"
+        title={t('Cases', 'Fälle')}
+        description={t('Administrative processes and deadlines', 'Verfahren und Fristen')}
+        onPress={() => router.push('/cases')}
+      />
+      <ActionTile
         icon="settings-outline"
         title={t('Settings', 'Einstellungen')}
         description={t('Language, notifications and storage', 'Sprache, Mitteilungen und Speicher')}
@@ -34,6 +40,24 @@ export default function MoreScreen() {
         title={t('Your documents', 'Deine Dokumente')}
         description={t('Everything in one place', 'Alles an einem Ort')}
         onPress={() => router.navigate('/(tabs)/documents')}
+      />
+      <ActionTile
+        icon="create-outline"
+        title={t('Generate document', 'Dokument erstellen')}
+        description={t('Letters and requests from templates', 'Briefe und Anträge aus Vorlagen')}
+        onPress={() => router.push('/generate-document')}
+      />
+      <ActionTile
+        icon="people-outline"
+        title={t('People', 'Personen')}
+        description={t('People connected to your documents', 'Personen in deinen Dokumenten')}
+        onPress={() => router.push('/people')}
+      />
+      <ActionTile
+        icon="business-outline"
+        title={t('Organisations', 'Organisationen')}
+        description={t('Authorities, companies and providers', 'Behörden, Firmen und Anbieter')}
+        onPress={() => router.push('/organisations')}
       />
     </Page>
   );

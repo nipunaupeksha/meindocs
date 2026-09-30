@@ -9,7 +9,12 @@
     "./schema": "./src/schema.ts",
     "./relations": "./src/relations.ts",
     "./client": "./src/client.ts",
-    "./repositories": "./src/repositories.ts"
+    "./repositories": "./src/repositories.ts",
+    "./search": "./src/search.ts",
+    "./case-repository": "./src/case-repository.ts",
+    "./generated-documents": "./src/generated-documents.ts",
+    "./people-organisations": "./src/people-organisations.ts",
+    "./dashboard": "./src/dashboard.ts"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json",
@@ -18,6 +23,7 @@
     "db:push": "drizzle-kit push --config drizzle.config.ts"
   },
   "dependencies": {
+    "@meindocs/config": "workspace:*",
     "@meindocs/domain": "workspace:*",
     "drizzle-orm": "^0.44.7"
   },

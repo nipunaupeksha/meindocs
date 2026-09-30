@@ -1,0 +1,19 @@
+CREATE INDEX `actions_document_idx` ON `actions` (`document_id`);--> statement-breakpoint
+CREATE INDEX `actions_created_at_idx` ON `actions` (`createdAt`);--> statement-breakpoint
+CREATE INDEX `case_actions_action_idx` ON `case_actions` (`action_id`);--> statement-breakpoint
+CREATE INDEX `case_checklist_case_idx` ON `case_checklist_items` (`case_id`);--> statement-breakpoint
+CREATE INDEX `case_checklist_due_idx` ON `case_checklist_items` (`due_date`);--> statement-breakpoint
+CREATE INDEX `case_documents_document_idx` ON `case_documents` (`document_id`);--> statement-breakpoint
+CREATE INDEX `case_organisations_org_idx` ON `case_organisations` (`organisation_id`);--> statement-breakpoint
+CREATE INDEX `case_people_person_idx` ON `case_people` (`person_id`);--> statement-breakpoint
+CREATE INDEX `case_timeline_case_idx` ON `case_timeline` (`case_id`,`createdAt`);--> statement-breakpoint
+CREATE INDEX `document_relations_target_idx` ON `document_relations` (`target_document_id`);--> statement-breakpoint
+CREATE INDEX `document_tags_tag_idx` ON `document_tags` (`tag_id`);--> statement-breakpoint
+CREATE INDEX `documents_created_at_idx` ON `documents` (`createdAt`);--> statement-breakpoint
+CREATE INDEX `documents_type_domain_idx` ON `documents` (`type`,`domain`);--> statement-breakpoint
+CREATE INDEX `organisations_name_idx` ON `organisations` (`name`);--> statement-breakpoint
+CREATE INDEX `organisations_type_idx` ON `organisations` (`type`);--> statement-breakpoint
+CREATE INDEX `payments_due_date_idx` ON `payments` (`due_date`);--> statement-breakpoint
+CREATE INDEX `payments_status_idx` ON `payments` (`status`);--> statement-breakpoint
+CREATE INDEX `people_name_idx` ON `people` (`last_name`,`first_name`);--> statement-breakpoint
+CREATE INDEX `people_relationship_idx` ON `people` (`relationship`);

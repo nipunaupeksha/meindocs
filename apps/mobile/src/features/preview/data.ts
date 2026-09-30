@@ -1,6 +1,17 @@
 export type Language = 'en' | 'de';
 export type Localized = { en: string; de: string };
 export type Category = 'insurance' | 'home' | 'work' | 'tax';
+export type TaxReview = {
+  taxRelevant?: boolean;
+  expenseCategory?: string;
+  taxYear?: number;
+  netAmount?: number;
+  vatAmount?: number;
+  grossAmount?: number;
+  vatRate?: number;
+  businessUsePercent?: number;
+  reviewStatus?: 'needs_review' | 'reviewed' | 'rejected';
+};
 export type MockDocument = {
   id: string;
   title: Localized;
@@ -12,15 +23,130 @@ export type MockDocument = {
   amount?: number;
   favorite: boolean;
   reviewed: boolean;
+  localUri?: string;
+  thumbnailUri?: string;
+  sha256?: string;
+  extractedText?: string;
+  ocrStatus?: 'completed' | 'needs-review' | 'unsupported';
+  tax?: TaxReview;
+  summary?: string;
+  referenceNumber?: string;
+  tags?: string[];
+  personId?: string;
+  organisationId?: string;
+  actionRequired?: boolean;
+  unpaidBill?: boolean;
+  expiryStatus?: 'active' | 'expired' | 'expiring';
 };
 export type MockTask = {
   id: string;
   title: Localized;
   documentId?: string;
   date: string;
+  expiryDate?: string;
   done: boolean;
   priority: 'normal' | 'high';
+  notificationId?: string;
 };
+export type MockCase = {
+  id: string;
+  title: string;
+  type:
+    | 'immigration'
+    | 'tax'
+    | 'housing'
+    | 'insurance'
+    | 'employment'
+    | 'family'
+    | 'vehicle'
+    | 'custom';
+  status: 'open' | 'action_required' | 'waiting' | 'completed' | 'archived';
+  deadline?: string;
+  documentIds: string[];
+  checklist: { id: string; title: string; completed: boolean }[];
+  people: string[];
+  organisations: string[];
+  timeline: { id: string; label: string; date: string }[];
+};
+export type MockPerson = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  preferredName?: string;
+  relationship: 'self' | 'spouse' | 'child' | 'dependent' | 'other';
+  dateOfBirth?: string;
+  nationality?: string;
+  addresses: string[];
+  documentIds: string[];
+  caseIds: string[];
+};
+export type MockOrganisation = {
+  id: string;
+  name: string;
+  type:
+    | 'government'
+    | 'employer'
+    | 'landlord'
+    | 'insurance'
+    | 'bank'
+    | 'utility'
+    | 'healthcare'
+    | 'business'
+    | 'education'
+    | 'other';
+  address?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  customerReference?: string;
+  documentIds: string[];
+  caseIds: string[];
+  paymentIds: string[];
+  actionIds: string[];
+};
+export const initialPeople: MockPerson[] = [
+  {
+    id: 'me',
+    firstName: 'Max',
+    lastName: 'Mustermann',
+    preferredName: 'Max',
+    relationship: 'self',
+    nationality: 'German',
+    addresses: ['Hauptstraße 1, 10115 Berlin'],
+    documentIds: ['salary'],
+    caseIds: [],
+  },
+];
+export const initialOrganisations: MockOrganisation[] = [
+  {
+    id: 'tax-office',
+    name: 'Finanzamt Berlin',
+    type: 'government',
+    address: 'Berlin',
+    email: 'post@finanzamt.example',
+    documentIds: ['receipt-train'],
+    caseIds: ['tax-2026'],
+    paymentIds: [],
+    actionIds: [],
+  },
+];
+export const initialCases: MockCase[] = [
+  {
+    id: 'tax-2026',
+    title: 'Tax filing 2026',
+    type: 'tax',
+    status: 'action_required',
+    deadline: '2027-07-31',
+    documentIds: ['receipt-desk', 'receipt-train'],
+    people: [],
+    organisations: ['Tax office'],
+    checklist: [
+      { id: 'tax-1', title: 'Review receipts', completed: true },
+      { id: 'tax-2', title: 'Prepare filing package', completed: false },
+    ],
+    timeline: [{ id: 'tax-created', label: 'Case created', date: '2026-09-01' }],
+  },
+];
 export type StorageId = 'local' | 'icloud' | 'google' | 'onedrive';
 export const storageNames: Record<StorageId, string> = {
   local: 'On this device',
@@ -111,6 +237,7 @@ export const initialTasks: MockTask[] = [
     title: { en: 'Review insurance renewal', de: 'Versicherungsverlängerung prüfen' },
     documentId: 'insurance',
     date: '2026-09-25',
+    expiryDate: '2026-09-30',
     done: false,
     priority: 'high',
   },

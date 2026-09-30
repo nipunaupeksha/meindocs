@@ -2,7 +2,8 @@ import { DocumentRow } from '@/components/app/document-row';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors, typography } from '@meindocs/ui';
 import type { ComponentProps, PropsWithChildren } from 'react';
-import { Pressable, ScrollView, Switch, TextInput, View } from 'react-native';
+import type { Edge } from 'react-native-safe-area-context';
+import { Image, Pressable, ScrollView, Switch, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { AppHeader } from '@/components/app/app-header';
 import { Screen } from '@/components/app/screen';
@@ -12,6 +13,7 @@ import { StatusBadge } from '@/components/app/status-badge';
 import { cn } from '@/lib/utils';
 import { usePreview } from './provider';
 import { categories, formatDate, type MockDocument, type MockTask } from './data';
+import { reminderState } from '@/features/reminders/status';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 export function Icon({
@@ -30,12 +32,20 @@ export function Page({
   title,
   subtitle,
   tab = false,
-}: PropsWithChildren<{ title?: string; subtitle?: string; tab?: boolean }>) {
+  edges,
+  showPreviewNote = true,
+}: PropsWithChildren<{
+  title?: string;
+  subtitle?: string;
+  tab?: boolean;
+  edges?: Edge[];
+  showPreviewNote?: boolean;
+}>) {
   return (
-    <Screen scroll edges={tab ? ['top', 'left', 'right'] : ['left', 'right', 'bottom']}>
+    <Screen scroll edges={edges ?? (tab ? ['top', 'left', 'right'] : ['left', 'right', 'bottom'])}>
       {title ? <AppHeader title={title} subtitle={subtitle} /> : null}
       {children}
-      <PreviewNote />
+      {showPreviewNote ? <PreviewNote /> : null}
     </Screen>
   );
 }
@@ -44,8 +54,8 @@ function PreviewNote() {
   return (
     <Text className="text-center text-xs text-muted-foreground">
       {t(
-        'Interactive preview · sample data · changes reset on reload',
-        'Interaktive Vorschau · Beispieldaten · Änderungen gelten bis zum Neuladen',
+        'Interactive preview · dashboard sample data resets; imported files stay in app storage',
+        'Interaktive Vorschau · Dashboard-Beispiele werden zurückgesetzt; importierte Dateien bleiben im App-Speicher',
       )}
     </Text>
   );
@@ -154,24 +164,42 @@ export function InfoRow({ label, value }: { label: string; value: string }) {
     </View>
   );
 }
+
+function DocumentThumbnail({ document }: { document: MockDocument }) {
+  if (document.thumbnailUri) {
+    return <Image source={{ uri: document.thumbnailUri }} className="h-12 w-12" />;
+  }
+  return <Icon name={document.favorite ? 'star-outline' : 'document-text-outline'} />;
+}
+
+function documentStatus(document: MockDocument, t: (english: string, german: string) => string) {
+  return {
+    label: document.reviewed ? t('Reviewed', 'Geprüft') : t('Needs review', 'Zu prüfen'),
+    tone: document.reviewed ? ('success' as const) : ('warning' as const),
+  };
+}
+
 export function DocumentItem({ document }: { document: MockDocument }) {
   const { language, t } = usePreview();
   return (
     <DocumentRow
       title={document.title[language]}
       metadata={`${categories[document.category][language]} · ${formatDate(document.date, language)} · ${document.size}`}
-      thumbnail={<Icon name={document.favorite ? 'star-outline' : 'document-text-outline'} />}
-      status={{
-        label: document.reviewed ? t('Reviewed', 'Geprüft') : t('Needs review', 'Zu prüfen'),
-        tone: document.reviewed ? 'success' : 'warning',
-      }}
+      thumbnail={<DocumentThumbnail document={document} />}
+      status={documentStatus(document, t)}
       onPress={() => router.push({ pathname: '/document/[id]', params: { id: document.id } })}
     />
   );
 }
 
+// fallow-ignore-next-line complexity
 export function TaskItem({ task }: { task: MockTask }) {
-  const { language, toggleTask } = usePreview();
+  const { language, toggleTask, t } = usePreview();
+  const state = reminderState({
+    dueDate: task.date,
+    expiryDate: task.expiryDate,
+    completed: task.done,
+  });
   return (
     <Card>
       <View className="flex-row items-center gap-md">
@@ -194,11 +222,31 @@ export function TaskItem({ task }: { task: MockTask }) {
           >
             {task.title[language]}
           </Text>
-          <Text className="text-xs text-muted-foreground">{formatDate(task.date, language)}</Text>
+          <Text
+            className={cn('text-xs', state === 'overdue' ? 'text-danger' : 'text-muted-foreground')}
+          >
+            {state === 'overdue' ? `${t('Overdue · ', 'Überfällig · ')}` : ''}
+            {formatDate(task.date, language)}
+            {task.expiryDate
+              ? ` · ${t('expires', 'endet')} ${formatDate(task.expiryDate, language)}`
+              : ''}
+          </Text>
         </View>
       </View>
       <View className="flex-row items-center justify-between gap-sm">
-        <TaskPriority priority={task.priority} />
+        <View className="flex-row items-center gap-sm">
+          <StatusBadge
+            label={
+              state === 'completed'
+                ? t('Completed', 'Erledigt')
+                : state === 'overdue'
+                  ? t('Overdue', 'Überfällig')
+                  : t('Upcoming', 'Offen')
+            }
+            tone={state === 'completed' ? 'success' : state === 'overdue' ? 'danger' : 'neutral'}
+          />
+          <TaskPriority priority={task.priority} />
+        </View>
         <TaskDocumentLink documentId={task.documentId} />
       </View>
     </Card>

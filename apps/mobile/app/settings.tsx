@@ -4,6 +4,8 @@ import { Text } from '@/components/ui/text';
 import { usePreview } from '@/features/preview/provider';
 import { Options, Page, SettingToggle } from '@/features/preview/ui';
 import { StorageSettings } from '@/features/preview/storage-settings';
+import { BackupSettings } from '@/features/backup/settings';
+import { SecuritySettings } from '@/features/security/settings';
 function Preferences() {
   const { t, settings, setSettings, notify } = usePreview();
   function update(key: 'reminders' | 'wifi' | 'biometric', value: boolean) {
@@ -15,8 +17,8 @@ function Preferences() {
       <SettingToggle
         title={t('Reminder alerts', 'Erinnerungsmitteilungen')}
         description={t(
-          'Preview preference; no system alerts are scheduled.',
-          'Vorschau-Einstellung; keine Systemmitteilungen werden geplant.',
+          'Schedule a local notification when a new reminder is created.',
+          'Beim Erstellen einer Erinnerung eine lokale Mitteilung planen.',
         )}
         value={settings.reminders}
         onChange={(value) => update('reminders', value)}
@@ -92,8 +94,24 @@ export default function SettingsScreen() {
         </Text>
       </Card>
       <StorageSettings />
+      <SectionHeader
+        title={t('Backups', 'Backups')}
+        description={t(
+          'Encrypted device backups only. No live sync.',
+          'Nur verschlüsselte Geräte-Backups. Keine Live-Synchronisierung.',
+        )}
+      />
+      <BackupSettings />
       <SectionHeader title={t('Privacy & preferences', 'Datenschutz & Einstellungen')} />
       <Preferences />
+      <SectionHeader
+        title={t('App security', 'App-Sicherheit')}
+        description={t(
+          'Protect this device without creating an online account.',
+          'Schütze dieses Gerät ohne Online-Konto.',
+        )}
+      />
+      <SecuritySettings />
       <Text className="text-center text-xs text-muted-foreground">MeinDocs · 0.0.0</Text>
     </Page>
   );

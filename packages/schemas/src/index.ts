@@ -5,6 +5,7 @@ import {
   DocumentStatus,
   DocumentType,
   TaxCategory,
+  TaxReviewStatus,
 } from '@meindocs/domain';
 
 export const healthResponseSchema = z.object({
@@ -55,6 +56,12 @@ export const documentMetadataSchema = z.object({
   mimeType: z.string().trim().min(1).optional(),
   fileSizeBytes: z.number().int().nonnegative().optional(),
   storageUri: z.string().trim().min(1).optional(),
+  sha256: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
+  thumbnailUri: z.string().trim().min(1).optional(),
+  pageCount: z.number().int().positive().optional(),
   issuer: z.union([personSchema, organisationSchema]).optional(),
   recipient: z.union([personSchema, organisationSchema]).optional(),
   capabilities: documentCapabilitiesSchema,
@@ -72,10 +79,25 @@ export const documentActionSchema = z.object({
 
 export const taxMetadataSchema = z.object({
   category: z.nativeEnum(TaxCategory),
+  taxRelevant: z.boolean().optional(),
+  expenseCategory: z.nativeEnum(TaxCategory).optional(),
   taxYear: z.number().int().min(1900).max(2_200).optional(),
   deductible: z.boolean().optional(),
   deductibleAmount: z.number().nonnegative().optional(),
+  netAmount: z.number().nonnegative().optional(),
+  vatAmount: z.number().nonnegative().optional(),
+  grossAmount: z.number().nonnegative().optional(),
+  vatRate: z.number().min(0).max(100).optional(),
+  businessUsePercent: z.number().min(0).max(100).optional(),
+  reviewStatus: z.nativeEnum(TaxReviewStatus).default(TaxReviewStatus.NeedsReview),
   notes: z.string().trim().max(2_000).optional(),
+});
+
+export const analyzeDocumentRequestSchema = z.object({
+  documentId: idSchema,
+  ocrText: z.string().trim().max(200_000),
+  locale: z.string().trim().min(2).max(12).default('de-DE'),
+  mimeType: z.string().trim().min(1).optional(),
 });
 
 export const aiAnalysisResponseSchema = z.object({
@@ -88,6 +110,25 @@ export const aiAnalysisResponseSchema = z.object({
   extractedText: z.string().optional(),
   extractedFields: z.record(z.string(), z.unknown()).optional(),
   warnings: z.array(z.string().trim().min(1)).optional(),
+  tags: z.array(z.string().trim().min(1)).default([]),
+  actions: z
+    .array(
+      z.object({
+        type: z.enum(['review', 'pay', 'renew', 'file']),
+        title: z.string().trim().min(1),
+        dueDate: isoDateSchema.optional(),
+      }),
+    )
+    .default([]),
+  dates: z
+    .array(
+      z.object({
+        label: z.string().trim().min(1),
+        value: isoDateSchema,
+      }),
+    )
+    .default([]),
+  taxSuggestion: taxMetadataSchema.optional(),
 });
 
 export const receiptLineItemSchema = z.object({
@@ -115,6 +156,7 @@ export const receiptExtractionSchema = z.object({
 export const reminderCreationSchema = z.object({
   title: z.string().trim().min(1).max(200),
   dueDate: isoDateSchema,
+  expiryDate: isoDateSchema.optional(),
   priority: z.enum(['normal', 'high']).default('normal'),
   documentId: idSchema.optional(),
   notes: z.string().trim().max(2_000).optional(),
@@ -126,3 +168,6 @@ export type TaxMetadata = z.infer<typeof taxMetadataSchema>;
 export type AiAnalysisResponse = z.infer<typeof aiAnalysisResponseSchema>;
 export type ReceiptExtraction = z.infer<typeof receiptExtractionSchema>;
 export type ReminderCreation = z.infer<typeof reminderCreationSchema>;
+export type AnalyzeDocumentRequest = z.infer<typeof analyzeDocumentRequestSchema>;
+
+export { DocumentDomain, DocumentType, TaxCategory, TaxReviewStatus } from '@meindocs/domain';

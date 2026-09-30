@@ -36,7 +36,12 @@ function DetailContent({ receipt, amount }: { receipt: MockDocument; amount: num
         label={receipt.reviewed ? t('Reviewed', 'Geprüft') : t('Needs review', 'Zu prüfen')}
         tone={receipt.reviewed ? 'success' : 'warning'}
       />
-      <PdfPreview title={receipt.title[language]} issuer={receipt.issuer} />
+      <PdfPreview
+        title={receipt.title[language]}
+        issuer={receipt.issuer}
+        thumbnailUri={receipt.thumbnailUri}
+        localUri={receipt.localUri}
+      />
       <SectionHeader title={t('Receipt details', 'Belegdetails')} />
       <Card>
         <InfoRow label={t('Merchant', 'Händler')} value={receipt.issuer} />

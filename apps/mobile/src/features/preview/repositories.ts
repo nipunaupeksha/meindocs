@@ -13,7 +13,7 @@ interface PreviewDocumentRepository {
 interface PreviewReminderRepository {
   list(): Promise<MockTask[]>;
   create(input: Omit<MockTask, 'id' | 'done'> & { id?: string }): Promise<MockTask>;
-  update(id: string, input: Partial<Pick<MockTask, 'done'>>): Promise<void>;
+  update(id: string, input: Partial<Pick<MockTask, 'done' | 'notificationId'>>): Promise<void>;
 }
 
 function cloneDocuments(items: MockDocument[]) {
