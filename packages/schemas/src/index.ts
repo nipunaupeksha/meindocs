@@ -6,6 +6,7 @@ import {
   DocumentType,
   TaxCategory,
   TaxReviewStatus,
+  CustomFieldType,
 } from '@meindocs/domain';
 
 export const healthResponseSchema = z.object({
@@ -47,6 +48,7 @@ export const documentCapabilitiesSchema = z.object({
 export const documentMetadataSchema = z.object({
   id: idSchema,
   title: z.string().trim().min(1).max(200),
+  titleSource: z.enum(['automatic', 'ai', 'user']).default('automatic'),
   type: z.nativeEnum(DocumentType),
   domain: z.nativeEnum(DocumentDomain),
   status: z.nativeEnum(DocumentStatus),
@@ -162,12 +164,42 @@ export const reminderCreationSchema = z.object({
   notes: z.string().trim().max(2_000).optional(),
 });
 
+export const customFieldScopeSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('global') }),
+  z.object({ kind: z.literal('domain'), domain: z.nativeEnum(DocumentDomain) }),
+  z.object({ kind: z.literal('type'), documentType: z.nativeEnum(DocumentType) }),
+]);
+
+export const customFieldDefinitionSchema = z.object({
+  id: idSchema,
+  name: z.string().trim().min(1).max(120),
+  key: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  type: z.nativeEnum(CustomFieldType),
+  description: z.string().trim().max(500).optional(),
+  options: z.array(z.string().trim().min(1)).optional(),
+  required: z.boolean(),
+  scope: customFieldScopeSchema,
+  createdAt: isoDateTimeSchema,
+  updatedAt: isoDateTimeSchema,
+});
+
+export const customFieldValueSchema = z.object({
+  id: idSchema,
+  documentId: idSchema,
+  definitionId: idSchema,
+  value: z.union([z.string(), z.number().finite(), z.boolean(), z.array(z.string())]),
+  createdAt: isoDateTimeSchema,
+  updatedAt: isoDateTimeSchema,
+});
+
 export type DocumentMetadata = z.infer<typeof documentMetadataSchema>;
 export type DocumentAction = z.infer<typeof documentActionSchema>;
 export type TaxMetadata = z.infer<typeof taxMetadataSchema>;
 export type AiAnalysisResponse = z.infer<typeof aiAnalysisResponseSchema>;
 export type ReceiptExtraction = z.infer<typeof receiptExtractionSchema>;
 export type ReminderCreation = z.infer<typeof reminderCreationSchema>;
+export type CustomFieldDefinition = z.infer<typeof customFieldDefinitionSchema>;
+export type CustomFieldValue = z.infer<typeof customFieldValueSchema>;
 export type AnalyzeDocumentRequest = z.infer<typeof analyzeDocumentRequestSchema>;
 
 export { DocumentDomain, DocumentType, TaxCategory, TaxReviewStatus } from '@meindocs/domain';

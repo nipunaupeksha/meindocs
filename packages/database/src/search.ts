@@ -7,6 +7,10 @@ import type {
 import { eq, sql } from 'drizzle-orm';
 import { documentTags } from './schema';
 
+type SearchDatabase = {
+  run(query: unknown): unknown;
+  all(query: unknown): unknown[];
+};
 type DrizzleDatabase = ReturnType<typeof import('drizzle-orm/bun-sqlite').drizzle>;
 
 const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
@@ -15,6 +19,7 @@ function documentFromRow(row: Record<string, unknown>): Document {
   return {
     id: String(row.id),
     title: String(row.title),
+    titleSource: (row.title_source as 'automatic' | 'ai' | 'user') ?? 'automatic',
     type: row.type as Document['type'],
     domain: row.domain as Document['domain'],
     status: row.status as Document['status'],
@@ -68,9 +73,17 @@ function whereClause(query: DocumentSearchQuery, now = new Date().toISOString())
     clauses.push(`COALESCE(tax.tax_relevant, 0) = ${filters.taxRelevant ? 1 : 0}`);
   if (filters.taxYear !== undefined) clauses.push(`tax.tax_year = ${filters.taxYear}`);
   if (filters.actionRequired) clauses.push(`d.status = 'needs_review'`);
+  if (filters.needsAttention)
+    clauses.push(
+      `(d.status = 'needs_review' OR EXISTS (SELECT 1 FROM payments p WHERE p.document_id = d.id AND p.status IN ('pending', 'overdue')) OR EXISTS (SELECT 1 FROM reminders r WHERE r.document_id = d.id AND r.completed = 0 AND (r.due_date <= datetime(${quote(now)}, '+30 days') OR r.expiry_date <= datetime(${quote(now)}, '+30 days'))))`,
+    );
   if (filters.unpaidBill)
     clauses.push(
       `EXISTS (SELECT 1 FROM payments p WHERE p.document_id = d.id AND p.status IN ('pending', 'overdue'))`,
+    );
+  if (filters.caseId)
+    clauses.push(
+      `EXISTS (SELECT 1 FROM case_documents cd WHERE cd.document_id = d.id AND cd.case_id = ${quote(filters.caseId)})`,
     );
   if (filters.expiryStatus === 'expired')
     clauses.push(
@@ -80,6 +93,14 @@ function whereClause(query: DocumentSearchQuery, now = new Date().toISOString())
     clauses.push(
       `EXISTS (SELECT 1 FROM reminders r WHERE r.document_id = d.id AND r.expiry_date >= ${quote(now)} AND r.expiry_date <= datetime(${quote(now)}, '+30 days') AND r.completed = 0)`,
     );
+  if (filters.expiryFrom)
+    clauses.push(
+      `EXISTS (SELECT 1 FROM reminders r WHERE r.document_id = d.id AND r.expiry_date >= ${quote(filters.expiryFrom)} AND r.completed = 0)`,
+    );
+  if (filters.expiryTo)
+    clauses.push(
+      `EXISTS (SELECT 1 FROM reminders r WHERE r.document_id = d.id AND r.expiry_date <= ${quote(filters.expiryTo)} AND r.completed = 0)`,
+    );
   if (filters.expiryStatus === 'active')
     clauses.push(
       `NOT EXISTS (SELECT 1 FROM reminders r WHERE r.document_id = d.id AND r.expiry_date < ${quote(now)} AND r.completed = 0)`,
@@ -88,6 +109,15 @@ function whereClause(query: DocumentSearchQuery, now = new Date().toISOString())
     clauses.push(
       `EXISTS (SELECT 1 FROM document_tags dt JOIN tags tg ON tg.id = dt.tag_id WHERE dt.document_id = d.id AND tg.name = ${quote(tag)})`,
     );
+  for (const [key, condition] of Object.entries(filters.customFields ?? {})) {
+    const value =
+      condition.equals === undefined ? undefined : quote(JSON.stringify(condition.equals));
+    const contains =
+      condition.contains === undefined ? undefined : quote(`%${condition.contains}%`);
+    clauses.push(
+      `EXISTS (SELECT 1 FROM custom_field_values cfv JOIN custom_field_definitions cfd ON cfd.id = cfv.definition_id WHERE cfv.document_id = d.id AND cfd.key = ${quote(key)}${value ? ` AND cfv.value = ${value}` : ''}${contains ? ` AND cfv.value LIKE ${contains}` : ''}${condition.gt !== undefined ? ` AND CAST(json_extract(cfv.value, '$') AS REAL) > ${condition.gt}` : ''}${condition.lt !== undefined ? ` AND CAST(json_extract(cfv.value, '$') AS REAL) < ${condition.lt}` : ''})`,
+    );
+  }
   return clauses.join(' AND ');
 }
 
@@ -99,7 +129,7 @@ function orderBy(sort: DocumentSearchQuery['sort']) {
   return 'd.createdAt DESC';
 }
 
-export async function syncDocumentSearchIndex(db: DrizzleDatabase, documentId: string) {
+export async function syncDocumentSearchIndex(db: SearchDatabase, documentId: string) {
   const id = quote(documentId);
   await db.run(sql.raw(`DELETE FROM documents_fts WHERE document_id = ${id}`));
   const rows = await db.all(

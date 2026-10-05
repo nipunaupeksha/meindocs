@@ -205,6 +205,7 @@ export interface DocumentAction {
 export interface Document {
   id: string;
   title: string;
+  titleSource: import('./document-naming').DocumentTitleSource;
   type: DocumentType;
   domain: DocumentDomain;
   status: DocumentStatus;
@@ -276,3 +277,8 @@ export * from './people-organisations-service';
 export * from './dashboard';
 export * from './export';
 export * from './errors';
+export * from './custom-fields';
+export * from './document-naming';
+export * from './document-series';
+export * from './smart-views';
+export * from './bulk-operations';

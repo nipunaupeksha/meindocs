@@ -10,7 +10,19 @@
     "apps/mobile/src/features/security/state.test.ts",
     "packages/domain/src/dashboard.test.ts",
     "packages/domain/src/export.test.ts",
-    "packages/domain/src/errors.test.ts"
+    "packages/domain/src/errors.test.ts",
+    "packages/domain/src/custom-fields.test.ts",
+    "packages/database/src/custom-fields.test.ts",
+    "packages/domain/src/document-naming.test.ts",
+    "packages/domain/src/document-series.test.ts",
+    "packages/database/src/document-series.test.ts",
+    "packages/domain/src/smart-views.test.ts",
+    "packages/database/src/smart-views.test.ts",
+    "packages/domain/src/bulk-operations.test.ts",
+    "packages/database/src/bulk-operations.test.ts",
+    "apps/mobile/src/features/email-import/service.test.ts",
+    "apps/mobile/src/features/cloud-import/service.test.ts",
+    "apps/mobile/src/features/email-import/providers.ts"
   ],
   "ignoreDependencies": [
     "react-native-reanimated",

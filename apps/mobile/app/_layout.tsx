@@ -123,6 +123,14 @@ function RootNavigator() {
           name="document/[id]"
           options={{ title: t('Document Detail', 'Dokumentdetails') }}
         />
+        <Stack.Screen
+          name="document/edit"
+          options={{ title: t('Edit Document', 'Dokument bearbeiten') }}
+        />
+        <Stack.Screen
+          name="document/series"
+          options={{ title: t('Document Series', 'Dokumentenserie') }}
+        />
 
         <Stack.Screen
           name="create-reminder"
@@ -135,6 +143,13 @@ function RootNavigator() {
         />
 
         <Stack.Screen name="settings" options={{ title: t('Settings', 'Einstellungen') }} />
+        <Stack.Screen name="email-import" options={{ title: t('Email Import', 'E-Mail-Import') }} />
+        <Stack.Screen name="cloud-import" options={{ title: t('Cloud Import', 'Cloud-Import') }} />
+        <Stack.Screen
+          name="cloud-import/selection"
+          options={{ title: t('Import Selection', 'Importauswahl') }}
+        />
+        <Stack.Screen name="smart-view" options={{ title: t('Smart View', 'Smart View') }} />
       </Stack>
     </AppErrorBoundary>
   );

@@ -17,6 +17,10 @@ import {
   reminders,
   tags,
   taxMetadata,
+  customFieldDefinitions,
+  customFieldValues,
+  documentSeries,
+  documentSeriesMembers,
 } from './schema';
 
 export const peopleRelations = relations(people, ({ many }) => ({
@@ -31,6 +35,7 @@ export const organisationsRelations = relations(organisations, ({ many }) => ({
   receivedDocuments: many(documents, { relationName: 'recipientOrganisation' }),
   actions: many(actions),
   cases: many(cases),
+  series: many(documentSeries),
 }));
 
 export const documentsRelations = relations(documents, ({ one, many }) => ({
@@ -59,9 +64,30 @@ export const documentsRelations = relations(documents, ({ one, many }) => ({
   reminders: many(reminders),
   payments: many(payments),
   taxMetadata: one(taxMetadata),
+  customFields: many(customFieldValues),
   caseDocuments: many(caseDocuments),
   outgoingRelations: many(documentRelations, { relationName: 'sourceDocument' }),
   incomingRelations: many(documentRelations, { relationName: 'targetDocument' }),
+  seriesMembers: many(documentSeriesMembers),
+}));
+
+export const documentSeriesRelations = relations(documentSeries, ({ one, many }) => ({
+  organisation: one(organisations, {
+    fields: [documentSeries.organisationId],
+    references: [organisations.id],
+  }),
+  members: many(documentSeriesMembers),
+}));
+
+export const documentSeriesMembersRelations = relations(documentSeriesMembers, ({ one }) => ({
+  series: one(documentSeries, {
+    fields: [documentSeriesMembers.seriesId],
+    references: [documentSeries.id],
+  }),
+  document: one(documents, {
+    fields: [documentSeriesMembers.documentId],
+    references: [documents.id],
+  }),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -112,6 +138,21 @@ export const taxMetadataRelations = relations(taxMetadata, ({ one }) => ({
   document: one(documents, {
     fields: [taxMetadata.documentId],
     references: [documents.id],
+  }),
+}));
+
+export const customFieldDefinitionsRelations = relations(customFieldDefinitions, ({ many }) => ({
+  values: many(customFieldValues),
+}));
+
+export const customFieldValuesRelations = relations(customFieldValues, ({ one }) => ({
+  document: one(documents, {
+    fields: [customFieldValues.documentId],
+    references: [documents.id],
+  }),
+  definition: one(customFieldDefinitions, {
+    fields: [customFieldValues.definitionId],
+    references: [customFieldDefinitions.id],
   }),
 }));
 

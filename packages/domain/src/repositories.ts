@@ -27,6 +27,7 @@ export interface DocumentFilters {
 export type SearchSort = 'relevance' | 'newest' | 'oldest' | 'expiry' | 'due';
 
 export interface DocumentSearchFilters {
+  needsAttention?: boolean;
   domain?: DocumentDomain;
   type?: DocumentType;
   personId?: string;
@@ -39,6 +40,13 @@ export interface DocumentSearchFilters {
   unpaidBill?: boolean;
   expiryStatus?: 'active' | 'expired' | 'expiring';
   tags?: string[];
+  caseId?: string;
+  expiryFrom?: string;
+  expiryTo?: string;
+  customFields?: Record<
+    string,
+    { equals?: string | number | boolean; contains?: string; gt?: number; lt?: number }
+  >;
 }
 
 export interface DocumentSearchQuery {
@@ -64,6 +72,7 @@ export interface DocumentSearchRepository {
 type DocumentMutableFields = Pick<
   Document,
   | 'title'
+  | 'titleSource'
   | 'type'
   | 'domain'
   | 'status'

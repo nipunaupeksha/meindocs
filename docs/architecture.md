@@ -22,6 +22,16 @@ The mobile preview adapter currently supplies sample data for the screens while 
 
 The processing pipeline is import → save locally → OCR on device where supported → optional API analysis → draft review. Reminders, cases, people, organisations, tax metadata, local FTS5 search, deterministic document generation, encrypted Google Drive backup, export, sharing, onboarding, biometrics, and app locking are implemented as local-first features. Google Drive is an optional encrypted backup target and does not participate in real-time sync.
 
+Recurring documents are represented locally as document series. Matching uses issuer, organisation, document type, title or identifier continuity, and expected date intervals. Only safe defaults such as tags and tax classification are suggested for inheritance; amounts, invoice numbers, due dates, and reference numbers remain document-specific. Missing expected members are exposed by the local service layer without sending notifications.
+
+Smart Views are saved filter and sort definitions evaluated against the local document search engine. They never create folders or duplicate document records. Built-in views and user-created views therefore remain current as local metadata changes.
+
+Email and cloud import are separate from encrypted backup. Both require explicit user selection, download attachments or files into the local vault, use checksum duplicate detection, and then pass the selected files through OCR, classification, extraction, and review. Only source identifiers and timestamps are retained locally; email bodies are never imported or sent to the AI service.
+
+Custom document metadata is represented by typed field definitions and per-document values. Definitions can be global, domain-scoped, or document-type-scoped; values are JSON-encoded in the local SQLite metadata layer and validated against their definition before saving. Common German identifiers are predefined without expanding the core `documents` table.
+
+Document titles are generated deterministically from structured metadata. The original filename remains separate, and `titleSource` records whether a title is automatic, AI-supplied, or user-edited. Automatic regeneration is skipped once a user override exists.
+
 ## Security and reliability
 
 Backup keys are generated/stored through SecureStore/Keychain-backed platform storage. They are never written to SQLite, AsyncStorage, source code, environment variables, or Drive. User-facing failures use the shared categorized error model; development logs redact OCR text, document contents, credentials, keys, tokens, and identity values. Retryable AI, OCR, and backup operations have bounded retry behavior, and navigation is protected by error boundaries.

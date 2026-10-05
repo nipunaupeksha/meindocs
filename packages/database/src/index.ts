@@ -7,3 +7,7 @@ export * from './case-repository';
 export * from './generated-documents';
 export * from './people-organisations';
 export * from './dashboard';
+export * from './custom-fields';
+export * from './document-series';
+export * from './smart-views';
+export * from './bulk-operations';

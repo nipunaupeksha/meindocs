@@ -8,7 +8,7 @@ import { Options, Page } from '@/features/preview/ui';
 import { usePreview } from '@/features/preview/provider';
 import {
   cleanupExport,
-  createDocumentExport,
+  createDocumentExportPackage,
   createTaxExport,
   previewTaxExport,
   shareExport,
@@ -41,15 +41,22 @@ function toExportDocument(
 
 export default function ExportScreen() {
   const { documents, t, notify } = usePreview();
-  const params = useLocalSearchParams<{ mode?: string; documentId?: string }>();
-  const isTax = params.mode === 'tax' || !params.documentId;
+  const params = useLocalSearchParams<{
+    mode?: string;
+    documentId?: string;
+    documentIds?: string;
+  }>();
+  const selectedIds =
+    params.documentIds?.split(',').filter(Boolean) ??
+    (params.documentId ? [params.documentId] : []);
+  const isTax = params.mode === 'tax' || !selectedIds.length;
   const [year, setYear] = useState('2026');
   const [reviewedOnly, setReviewedOnly] = useState(false);
   const [category, setCategory] = useState<TaxExportCategory | 'all'>('all');
   const [result, setResult] = useState<{ uri: string }>();
   const exportDocuments = useMemo(() => documents.map(toExportDocument), [documents]);
-  const selected = params.documentId
-    ? exportDocuments.filter((item) => item.id === params.documentId)
+  const selected = selectedIds.length
+    ? exportDocuments.filter((item) => selectedIds.includes(item.id))
     : exportDocuments;
   const preview = isTax
     ? previewTaxExport(exportDocuments, {
@@ -66,7 +73,7 @@ export default function ExportScreen() {
             reviewedOnly,
             categories: category === 'all' ? undefined : [category],
           })
-        : await createDocumentExport(selected[0]);
+        : await createDocumentExportPackage(selected);
       setResult(created);
       notify('Export created', 'The archive is ready to share.');
     } catch (error) {

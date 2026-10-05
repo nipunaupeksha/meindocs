@@ -64,6 +64,41 @@
       "when": 1790755067415,
       "tag": "0008_cultured_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1790940770212,
+      "tag": "0009_short_baron_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1790959400816,
+      "tag": "0010_sloppy_hairball",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1790965751919,
+      "tag": "0011_powerful_old_lace",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1790965899210,
+      "tag": "0012_parched_scalphunter",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1790967889610,
+      "tag": "0013_glossy_stark_industries",
+      "breakpoints": true
     }
   ]
 }

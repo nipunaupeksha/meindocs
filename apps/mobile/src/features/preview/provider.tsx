@@ -1,6 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@meindocs/ui';
-import { DashboardService } from '@meindocs/domain';
+import {
+  BulkDocumentService,
+  bulkResultMessage,
+  DashboardService,
+  builtInSmartViews,
+  type BulkDocumentOperation,
+  type SavedSearch,
+} from '@meindocs/domain';
+import type { CustomFieldValueData } from '@meindocs/domain';
 import {
   createContext,
   useContext,
@@ -37,7 +45,12 @@ import {
 function previewDocumentFromFile(file: LocalFileRecord, draft?: DocumentDraft) {
   return {
     id: file.id,
-    title: { en: draft?.title ?? file.originalName, de: draft?.title ?? file.originalName },
+    title: draft?.titlePair ?? {
+      en: draft?.title ?? file.originalName,
+      de: draft?.title ?? file.originalName,
+    },
+    titleSource: draft?.titleSource ?? 'automatic',
+    fileName: file.originalName,
     issuer: 'MeinDocs',
     category: 'home' as const,
     date: file.importedAt.slice(0, 10),
@@ -87,14 +100,19 @@ function usePreviewState() {
   });
   const [repositories] = useState(createPreviewRepositories);
   const [documents, setDocuments] = useState<MockDocument[]>([]);
+  const [smartViews, setSmartViews] = useState<SavedSearch[]>([]);
   const [tasks, setTasks] = useState<MockTask[]>([]);
   const [cases, setCases] = useState<MockCase[]>(initialCases);
   const [people, setPeople] = useState<MockPerson[]>(initialPeople);
   const [organisations, setOrganisations] = useState<MockOrganisation[]>(initialOrganisations);
+  const [customFieldValues, setCustomFieldValues] = useState<
+    Record<string, Record<string, CustomFieldValueData>>
+  >({});
   const [toast, setToast] = useState<{ id: number; title: string } | null>(null);
   const sequence = useRef(0);
   const t = (en: string, de: string) => (language === 'de' ? de : en);
   useEffect(() => {
+    setSmartViews(builtInSmartViews(2026));
     void Promise.all([
       repositories.documentRepository.list(),
       repositories.reminderRepository.list(),
@@ -103,8 +121,35 @@ function usePreviewState() {
       setTasks(loadedTasks);
     });
   }, [repositories]);
+  function createSmartView(input: Pick<SavedSearch, 'name' | 'icon' | 'filters' | 'sort'>) {
+    const timestamp = new Date().toISOString();
+    const created = {
+      ...input,
+      id: `smart-view-${++sequence.current}`,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+    setSmartViews((items) => [...items, created]);
+    notify('Smart View created', 'Smart View erstellt');
+    return created.id;
+  }
+  function updateSmartView(
+    id: string,
+    patch: Partial<Pick<SavedSearch, 'name' | 'icon' | 'filters' | 'sort'>>,
+  ) {
+    setSmartViews((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, ...patch, updatedAt: new Date().toISOString() } : item,
+      ),
+    );
+    notify('Smart View updated', 'Smart View aktualisiert');
+  }
   function notify(en: string, de: string) {
     if (toasts) setToast({ id: ++sequence.current, title: t(en, de) });
+  }
+  function saveCustomFieldValues(documentId: string, values: Record<string, CustomFieldValueData>) {
+    setCustomFieldValues((current) => ({ ...current, [documentId]: values }));
+    notify('Custom fields updated', 'Benutzerdefinierte Felder aktualisiert');
   }
   function changeLanguage(value: Language) {
     setLanguage(value);
@@ -127,11 +172,65 @@ function usePreviewState() {
   }
   async function updateDocument(
     id: string,
-    patch: Partial<Pick<MockDocument, 'favorite' | 'reviewed' | 'category'>>,
+    patch: Partial<
+      Pick<MockDocument, 'favorite' | 'reviewed' | 'category' | 'title' | 'titleSource'>
+    >,
   ) {
     await repositories.documentRepository.update(id, patch);
     setDocuments(await repositories.documentRepository.list());
     notify('Document updated', 'Dokument aktualisiert');
+  }
+  async function bulkUpdateDocuments(
+    documentIds: readonly string[],
+    operation: BulkDocumentOperation,
+  ) {
+    const selected = documentIds.slice(0, 1000);
+    const service = new BulkDocumentService({
+      execute: async (documentId, currentOperation) => {
+        const document = documents.find((item) => item.id === documentId);
+        if (!document) throw new Error('Document not found');
+        if (currentOperation.type === 'export')
+          throw new Error('Use the export screen for bulk export');
+        if (currentOperation.type === 'delete') {
+          await repositories.documentRepository.delete?.(documentId);
+        } else if (
+          currentOperation.type === 'add_tags' ||
+          currentOperation.type === 'remove_tags'
+        ) {
+          const next = new Set(document.tags ?? []);
+          currentOperation.type === 'add_tags'
+            ? currentOperation.tags.forEach((tag) => next.add(tag))
+            : currentOperation.tags.forEach((tag) => next.delete(tag));
+          await repositories.documentRepository.update(documentId, { tags: [...next] });
+        } else if (currentOperation.type === 'assign_person') {
+          await repositories.documentRepository.update(documentId, {
+            personId: currentOperation.personId ?? undefined,
+          });
+        } else if (currentOperation.type === 'assign_organisation') {
+          await repositories.documentRepository.update(documentId, {
+            organisationId: currentOperation.organisationId ?? undefined,
+          });
+        } else if (currentOperation.type === 'mark_tax_relevant') {
+          await repositories.documentRepository.update(documentId, {
+            tax: { ...document.tax, taxRelevant: currentOperation.value },
+          });
+        } else if (currentOperation.type === 'assign_tax_year') {
+          await repositories.documentRepository.update(documentId, {
+            tax: { ...document.tax, taxYear: currentOperation.year ?? undefined },
+          });
+        } else if (currentOperation.type === 'add_to_case') {
+          await repositories.documentRepository.update(documentId, {
+            caseIds: [...new Set([...(document.caseIds ?? []), currentOperation.caseId])],
+          });
+        } else if (currentOperation.type === 'archive') {
+          await repositories.documentRepository.update(documentId, { archived: true });
+        }
+      },
+    });
+    const result = await service.execute(selected, operation);
+    setDocuments(await repositories.documentRepository.list());
+    notify(bulkResultMessage(result), bulkResultMessage(result));
+    return result;
   }
   async function toggleTask(id: string) {
     const task = tasks.find((item) => item.id === id);
@@ -316,6 +415,9 @@ function usePreviewState() {
     folders,
     setFolders,
     documents,
+    smartViews,
+    createSmartView,
+    updateSmartView,
     cases,
     createCase,
     addDocumentToCase,
@@ -323,6 +425,8 @@ function usePreviewState() {
     updateCase,
     people,
     organisations,
+    customFieldValues,
+    saveCustomFieldValues,
     createPerson,
     updatePerson,
     createOrganisation,
@@ -330,6 +434,7 @@ function usePreviewState() {
     tasks,
     dashboard,
     updateDocument,
+    bulkUpdateDocuments,
     toggleTask,
     addTask,
     addDocument,

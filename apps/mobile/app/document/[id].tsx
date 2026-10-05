@@ -12,6 +12,8 @@ import { categories, formatDate, type Category } from '@/features/preview/data';
 import { PdfPreview } from '@/features/preview/pdf-preview';
 import { InfoRow, Options, Page } from '@/features/preview/ui';
 import { readRouteId } from '@/lib/route-params';
+import { CustomFieldsSection } from '@/features/custom-fields/ui';
+import { DocumentSeriesSection } from '@/features/document-series/ui';
 export default function DocumentDetailScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const { t, documents } = usePreview();
@@ -28,7 +30,7 @@ export default function DocumentDetailScreen() {
   return <DetailContent document={document} />;
 }
 function DetailContent({ document }: { document: MockDocument }) {
-  const { t, language, updateDocument } = usePreview();
+  const { t, language, updateDocument, customFieldValues } = usePreview();
   return (
     <Page>
       <View className="gap-sm">
@@ -55,6 +57,12 @@ function DetailContent({ document }: { document: MockDocument }) {
           value={`PDF · ${document.pages} ${t('pages', 'Seiten')} · ${document.size}`}
         />
       </Card>
+      <CustomFieldsSection
+        document={document}
+        values={customFieldValues[document.id] ?? {}}
+        onEdit={() => router.push({ pathname: '/document/edit', params: { id: document.id } })}
+      />
+      <DocumentSeriesSection document={document} />
       <SectionHeader title={t('Category', 'Kategorie')} />
       <Options
         value={document.category}

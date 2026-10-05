@@ -4,10 +4,8 @@ interface PreviewDocumentRepository {
   getById(id: string): Promise<MockDocument | null>;
   list(): Promise<MockDocument[]>;
   create(input: Omit<MockDocument, 'id'> & { id?: string }): Promise<MockDocument>;
-  update(
-    id: string,
-    input: Partial<Pick<MockDocument, 'favorite' | 'reviewed' | 'category'>>,
-  ): Promise<void>;
+  update(id: string, input: Partial<MockDocument>): Promise<void>;
+  delete?(id: string): Promise<void>;
 }
 
 interface PreviewReminderRepository {
@@ -46,6 +44,9 @@ export function createPreviewRepositories() {
     },
     async update(id, input) {
       documents = documents.map((item) => (item.id === id ? { ...item, ...input } : item));
+    },
+    async delete(id) {
+      documents = documents.filter((item) => item.id !== id);
     },
   };
 

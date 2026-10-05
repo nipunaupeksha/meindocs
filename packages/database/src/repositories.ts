@@ -56,6 +56,7 @@ function toDocument(row: DocumentRow): Document {
   return {
     id: row.id,
     title: row.title,
+    titleSource: row.titleSource,
     type: row.type,
     domain: row.domain,
     status: row.status,
@@ -145,6 +146,7 @@ export class SqliteDocumentRepository implements DocumentRepository {
       .values({
         id: ensureId(input.id),
         title: input.title,
+        titleSource: input.titleSource ?? 'automatic',
         type: input.type,
         domain: input.domain,
         status: input.status,

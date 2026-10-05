@@ -18,6 +18,14 @@ export type LocalFileRecord = {
   importedAt: string;
   isDuplicate: boolean;
   duplicateOf?: string;
+  sourceMetadata?: {
+    provider: string;
+    messageId?: string;
+    remoteFileId?: string;
+    sender?: string;
+    receivedDate?: string;
+    remoteModifiedAt?: string;
+  };
 };
 
 type LocalFileInput = {
@@ -25,6 +33,7 @@ type LocalFileInput = {
   name?: string;
   mimeType?: string;
   size?: number;
+  sourceMetadata?: LocalFileRecord['sourceMetadata'];
 };
 
 type StoredFileRecord = Omit<LocalFileRecord, 'isDuplicate' | 'duplicateOf'>;
@@ -84,6 +93,7 @@ function storedRecord(
   hash: string,
   kind: FileKind,
   id: string,
+  sourceMetadata?: LocalFileRecord['sourceMetadata'],
 ) {
   return {
     id,
@@ -94,6 +104,7 @@ function storedRecord(
     sha256: hash,
     localUri: source.uri,
     importedAt: new Date().toISOString(),
+    sourceMetadata,
   } satisfies StoredFileRecord;
 }
 
@@ -133,7 +144,7 @@ class LocalFileService {
     const destination = new File(filesDirectory, `${id}${extensionFor(input, kind)}`);
     await source.copy(destination, { overwrite: false });
 
-    const record = storedRecord(input, source, hash, kind, id);
+    const record = storedRecord(input, source, hash, kind, id, input.sourceMetadata);
     record.localUri = destination.uri;
     const thumbnailUri =
       kind === 'image' ? await this.createThumbnail(destination, hash) : undefined;

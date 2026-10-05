@@ -1,0 +1,1 @@
+ALTER TABLE `documents` ADD `title_source` text DEFAULT 'automatic' NOT NULL;

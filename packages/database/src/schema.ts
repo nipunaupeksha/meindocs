@@ -9,6 +9,8 @@ import {
   PersonRelationship,
   PaymentStatus,
   TaxCategory,
+  CustomFieldType,
+  DocumentSeriesFrequency,
 } from '@meindocs/domain';
 import { sql } from 'drizzle-orm';
 import {
@@ -77,6 +79,10 @@ export const documents = sqliteTable(
   {
     id: text('id').primaryKey(),
     title: text('title').notNull(),
+    titleSource: text('title_source')
+      .$type<'automatic' | 'ai' | 'user'>()
+      .notNull()
+      .default('automatic'),
     type: text('type').$type<DocumentType>().notNull(),
     domain: text('domain').$type<DocumentDomain>().notNull(),
     status: text('status').$type<DocumentStatus>().notNull().default(DocumentStatus.Inbox),
@@ -111,6 +117,116 @@ export const documents = sqliteTable(
     index('documents_updated_at_idx').on(table.updatedAt),
     index('documents_status_idx').on(table.status),
   ],
+);
+
+export const customFieldDefinitions = sqliteTable(
+  'custom_field_definitions',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    key: text('key').notNull(),
+    type: text('type').$type<CustomFieldType>().notNull(),
+    description: text('description'),
+    options: text('options'),
+    required: integer('required', { mode: 'boolean' }).notNull().default(false),
+    scopeKind: text('scope_kind').notNull().default('global'),
+    scopeDomain: text('scope_domain'),
+    scopeDocumentType: text('scope_document_type'),
+    createdAt: timestamp(),
+    updatedAt: timestamp(),
+  },
+  (table) => [
+    uniqueIndex('custom_field_definitions_key_scope_idx').on(
+      table.key,
+      table.scopeKind,
+      table.scopeDomain,
+      table.scopeDocumentType,
+    ),
+    index('custom_field_definitions_scope_idx').on(
+      table.scopeKind,
+      table.scopeDomain,
+      table.scopeDocumentType,
+    ),
+  ],
+);
+
+export const customFieldValues = sqliteTable(
+  'custom_field_values',
+  {
+    id: text('id').primaryKey(),
+    documentId: text('document_id')
+      .notNull()
+      .references(() => documents.id, { onDelete: 'cascade' }),
+    definitionId: text('definition_id')
+      .notNull()
+      .references(() => customFieldDefinitions.id, { onDelete: 'cascade' }),
+    value: text('value').notNull(),
+    createdAt: timestamp(),
+    updatedAt: timestamp(),
+  },
+  (table) => [
+    uniqueIndex('custom_field_values_document_definition_idx').on(
+      table.documentId,
+      table.definitionId,
+    ),
+    index('custom_field_values_definition_idx').on(table.definitionId),
+  ],
+);
+
+export const documentSeries = sqliteTable(
+  'document_series',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    documentType: text('document_type').$type<DocumentType>().notNull(),
+    issuer: text('issuer'),
+    organisationId: text('organisation_id').references(() => organisations.id),
+    relatedPersonId: text('related_person_id').references(() => people.id),
+    defaultCaseId: text('default_case_id').references(() => cases.id),
+    expectedFrequency: text('expected_frequency').$type<DocumentSeriesFrequency>().notNull(),
+    defaultTags: text('default_tags').notNull().default('[]'),
+    defaultTaxMetadata: text('default_tax_metadata'),
+    createdAt: timestamp(),
+    updatedAt: timestamp(),
+  },
+  (table) => [
+    index('document_series_org_idx').on(table.organisationId),
+    index('document_series_type_frequency_idx').on(table.documentType, table.expectedFrequency),
+  ],
+);
+
+export const documentSeriesMembers = sqliteTable(
+  'document_series_members',
+  {
+    id: text('id').primaryKey(),
+    seriesId: text('series_id')
+      .notNull()
+      .references(() => documentSeries.id, { onDelete: 'cascade' }),
+    documentId: text('document_id')
+      .notNull()
+      .references(() => documents.id, { onDelete: 'cascade' }),
+    documentDate: text('document_date').notNull(),
+    createdAt: timestamp(),
+  },
+  (table) => [
+    uniqueIndex('document_series_members_pair_idx').on(table.seriesId, table.documentId),
+    index('document_series_members_document_idx').on(table.documentId),
+    index('document_series_members_date_idx').on(table.seriesId, table.documentDate),
+  ],
+);
+
+export const savedSearches = sqliteTable(
+  'saved_searches',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    icon: text('icon').notNull().default('search'),
+    filters: text('filters').notNull().default('{}'),
+    sort: text('sort').notNull().default('newest'),
+    createdAt: timestamp(),
+    updatedAt: timestamp(),
+  },
+  (table) => [index('saved_searches_updated_idx').on(table.updatedAt)],
 );
 
 export const tags = sqliteTable(

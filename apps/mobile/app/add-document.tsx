@@ -148,6 +148,17 @@ export default function AddDocumentScreen() {
         onCloud={() => notify('Cloud import is coming next', 'Cloud-Import folgt als Nächstes')}
       />
       <Card>
+        <Text className="font-manrope-semibold">
+          {t('Import from connected services', 'Aus verbundenen Diensten importieren')}
+        </Text>
+        <Button variant="outline" onPress={() => router.push('/email-import')}>
+          <Text>{t('Email attachments', 'E-Mail-Anhänge')}</Text>
+        </Button>
+        <Button variant="outline" onPress={() => router.push('/cloud-import')}>
+          <Text>{t('Google Drive files', 'Google-Drive-Dateien')}</Text>
+        </Button>
+      </Card>
+      <Card>
         <Icon name="folder-open-outline" />
         <InfoRow
           label={t('Destination', 'Speicherort')}

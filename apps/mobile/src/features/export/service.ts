@@ -108,28 +108,35 @@ export async function createTaxExport(documents: ExportDocument[], options: TaxE
   return { uri: archiveFile.uri, manifest, preview };
 }
 
-export async function createDocumentExport(document: ExportDocument) {
+export async function createDocumentExportPackage(documents: ExportDocument[]) {
   ensureRoot();
-  const exportId = `document-${document.id}-${Date.now()}`;
+  const exportId = `documents-${Date.now()}`;
   const directory = new Directory(root, exportId);
   directory.create({ idempotent: true, intermediates: true });
-  const record = (await listLocalFileRecords()).find(
-    (item) =>
-      item.id === document.id ||
-      item.originalName === document.sourceFileName ||
-      item.localUri === document.sourceUri,
-  );
-  if (!record) throw new Error('The document file is not available in the local vault.');
-  const fileName = safeName(document.sourceFileName ?? record.originalName);
-  const files: Record<string, Uint8Array> = {
-    [fileName]: await readLocalFileBytes(record.localUri),
-  };
+  const records = await listLocalFileRecords();
+  const files: Record<string, Uint8Array> = {};
+  const manifestFiles: ExportManifest['files'] = [];
+  for (const document of documents) {
+    const record = records.find(
+      (item) =>
+        item.id === document.id ||
+        item.originalName === document.sourceFileName ||
+        item.localUri === document.sourceUri,
+    );
+    if (!record) throw new Error(`The document file is not available: ${document.id}`);
+    const fileName = safeName(`${document.id}-${document.sourceFileName ?? record.originalName}`);
+    files[fileName] = await readLocalFileBytes(record.localUri);
+    manifestFiles.push({
+      path: fileName,
+      documentId: document.id,
+      size: record.size,
+      checksum: record.sha256,
+    });
+  }
   const manifest = createExportManifest({
     type: 'documents',
     createdAt: new Date().toISOString(),
-    files: [
-      { path: fileName, documentId: document.id, size: record.size, checksum: record.sha256 },
-    ],
+    files: manifestFiles,
   });
   files['manifest.json'] = strToU8(JSON.stringify(manifest, null, 2));
   const archiveFile = new File(directory, `${exportId}.zip`);

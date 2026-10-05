@@ -15,6 +15,8 @@ export type TaxReview = {
 export type MockDocument = {
   id: string;
   title: Localized;
+  titleSource?: 'automatic' | 'ai' | 'user';
+  fileName?: string;
   issuer: string;
   category: Category;
   date: string;
@@ -37,6 +39,8 @@ export type MockDocument = {
   actionRequired?: boolean;
   unpaidBill?: boolean;
   expiryStatus?: 'active' | 'expired' | 'expiring';
+  caseIds?: string[];
+  archived?: boolean;
 };
 export type MockTask = {
   id: string;

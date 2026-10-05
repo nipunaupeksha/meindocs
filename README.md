@@ -70,6 +70,11 @@ Expo Doctor passes SDK compatibility and package-directory checks. With Bun's is
 - Repository contracts for documents, reminders, actions, cases, people, and organisations, with Bun SQLite/Drizzle implementations.
 - SQLite FTS5 document search with metadata, OCR, tags, tax, relationship, and deadline filters.
 - Local reminders and notifications, case management, tax metadata, deterministic letter generation, tax export, ZIP sharing, and encrypted Google Drive backup.
+- Typed custom fields for common document identifiers such as policy numbers, contract numbers, meter numbers, customer numbers, Aktenzeichen, and Beitragsnummern.
+- Deterministic bilingual document naming with preserved original filenames and user title overrides.
+- Recurring document-series detection with conservative metadata inheritance and missing-member checks.
+- Dynamic Smart Views and saved searches backed by the local search index.
+- Explicit email attachment and Google Drive import through the local ingestion pipeline.
 - Onboarding, optional biometrics, app lock, SecureStore-backed keys, safe error messages, redacted development logging, and navigation error boundaries.
 
 The mobile preview provider still uses an in-memory adapter for the Expo UI because the current SQLite implementation depends on Bun's native SQLite runtime. Wiring the repository interface to a native SQLite driver is the next storage milestone; this does not move files or OCR content to the backend.

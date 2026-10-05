@@ -1,6 +1,7 @@
 import type { MockDocument } from './data';
 
 export type LocalSearchFilters = {
+  needsAttention?: boolean;
   category?: string;
   type?: string;
   personId?: string;
@@ -13,6 +14,13 @@ export type LocalSearchFilters = {
   unpaidBill?: boolean;
   expiryStatus?: MockDocument['expiryStatus'];
   tags?: string[];
+  caseId?: string;
+  expiryFrom?: string;
+  expiryTo?: string;
+  customFields?: Record<
+    string,
+    { equals?: string | number | boolean; contains?: string; gt?: number; lt?: number }
+  >;
 };
 export type LocalSearchSort = 'relevance' | 'newest' | 'oldest' | 'expiry' | 'due';
 
@@ -60,10 +68,22 @@ export function searchLocalDocuments(
         Boolean(document.actionRequired) !== filters.actionRequired
       )
         return false;
+      if (
+        filters.needsAttention &&
+        !document.actionRequired &&
+        !document.unpaidBill &&
+        document.expiryStatus !== 'expiring' &&
+        document.expiryStatus !== 'expired'
+      )
+        return false;
       if (filters.unpaidBill !== undefined && Boolean(document.unpaidBill) !== filters.unpaidBill)
         return false;
       if (filters.expiryStatus && document.expiryStatus !== filters.expiryStatus) return false;
       if (filters.tags?.some((tag) => !(document.tags ?? []).includes(tag))) return false;
+      if (filters.caseId && !(document.caseIds ?? []).includes(filters.caseId)) return false;
+      if (filters.expiryFrom && (!document.date || document.date < filters.expiryFrom))
+        return false;
+      if (filters.expiryTo && (!document.date || document.date > filters.expiryTo)) return false;
       return true;
     });
   rows.sort((a, b) => {
