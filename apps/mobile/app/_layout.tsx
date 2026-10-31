@@ -18,6 +18,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { AppErrorBoundary } from '@/components/app/error-boundary';
+import { LanguageProvider } from '@/i18n/provider';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -59,9 +60,11 @@ export default function RootLayout() {
     <AppErrorBoundary area="root-navigation">
       <SafeAreaProvider>
         <SecurityProvider>
-          <PreviewProvider>
-            <RootNavigator />
-          </PreviewProvider>
+          <LanguageProvider>
+            <PreviewProvider>
+              <RootNavigator />
+            </PreviewProvider>
+          </LanguageProvider>
         </SecurityProvider>
       </SafeAreaProvider>
     </AppErrorBoundary>
@@ -121,7 +124,7 @@ function RootNavigator() {
 
         <Stack.Screen
           name="document/[id]"
-          options={{ title: t('Document Detail', 'Dokumentdetails') }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="document/edit"

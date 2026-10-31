@@ -10,7 +10,7 @@ import { usePreview } from '@/features/preview/provider';
 import { money, formatDate } from '@/features/preview/data';
 import { Icon, Options, Page } from '@/features/preview/ui';
 export default function TaxScreen() {
-  const { t, language, documents } = usePreview();
+  const { t, language, localeLanguage, documents } = usePreview();
   const [filter, setFilter] = useState('all');
   const [year, setYear] = useState('all');
   const receipts = documents.filter((item) => item.amount !== undefined);
@@ -27,7 +27,7 @@ export default function TaxScreen() {
         <Text className="text-sm text-white/80">
           {t('Collected expenses', 'Gesammelte Ausgaben')}
         </Text>
-        <Text className="font-manrope-bold text-3xl text-white">{money(total, language)}</Text>
+        <Text className="font-manrope-bold text-3xl text-white">{money(total, localeLanguage)}</Text>
         <Text className="text-sm text-white/80">
           {receipts.length}{' '}
           {t(
@@ -52,24 +52,30 @@ export default function TaxScreen() {
       </Card>
       <SectionHeader
         title={t('Your receipts', 'Deine Belege')}
-        action={{ label: t('Add', 'Hinzufügen'), onPress: () => router.push('/add-document') }}
+        action={{
+          label: t('Add', 'Hinzufügen'),
+          icon: 'add-outline',
+          onPress: () => router.push('/add-document'),
+        }}
       />
-      <Options
-        value={filter}
-        onChange={setFilter}
-        options={[
-          { value: 'all', label: t('All', 'Alle') },
-          { value: 'review', label: t('Needs review', 'Zu prüfen') },
-        ]}
-      />
-      <Options
-        value={year}
-        onChange={setYear}
-        options={[
-          { value: 'all', label: t('All years', 'Alle Jahre') },
-          { value: '2026', label: '2026' },
-        ]}
-      />
+      <View className="gap-sm">
+        <Options
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: t('All', 'Alle') },
+            { value: 'review', label: t('Needs review', 'Zu prüfen') },
+          ]}
+        />
+        <Options
+          value={year}
+          onChange={setYear}
+          options={[
+            { value: 'all', label: t('All years', 'Alle Jahre') },
+            { value: '2026', label: '2026' },
+          ]}
+        />
+      </View>
       {receipts
         .filter((item) => filter === 'all' || !item.reviewed)
         .filter(
@@ -88,10 +94,10 @@ export default function TaxScreen() {
                 <View className="flex-1">
                   <Text className="font-manrope-semibold">{item.issuer}</Text>
                   <Text className="text-xs text-muted-foreground">
-                    {formatDate(item.date, language)}
+                    {formatDate(item.date, localeLanguage)}
                   </Text>
                 </View>
-                <Text className="font-manrope-semibold">{money(item.amount ?? 0, language)}</Text>
+                <Text className="font-manrope-semibold">{money(item.amount ?? 0, localeLanguage)}</Text>
               </View>
               <Text className="text-sm text-muted-foreground">{item.title[language]}</Text>
               <StatusBadge

@@ -1,3 +1,5 @@
+import type { SupportedLanguage } from '@/i18n/languages';
+
 export type Language = 'en' | 'de';
 export type Localized = { en: string; de: string };
 export type Category = 'insurance' | 'home' | 'work' | 'tax';
@@ -261,16 +263,20 @@ export const initialTasks: MockTask[] = [
     priority: 'normal',
   },
 ];
-export function formatDate(value: string, language: Language) {
-  return new Intl.DateTimeFormat(language === 'de' ? 'de-DE' : 'en-GB', {
+export function formatDate(value: string, language: SupportedLanguage) {
+  return new Intl.DateTimeFormat(
+    ({ en: 'en-GB', de: 'de-DE', da: 'da-DK', nb: 'nb-NO', sv: 'sv-SE' })[language],
+    {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
     timeZone: 'UTC',
-  }).format(new Date(`${value}T12:00:00Z`));
+    },
+  ).format(new Date(`${value}T12:00:00Z`));
 }
-export function money(value: number, language: Language) {
-  return new Intl.NumberFormat(language === 'de' ? 'de-DE' : 'en-IE', {
+export function money(value: number, language: SupportedLanguage) {
+  const locale = ({ en: 'en-IE', de: 'de-DE', da: 'da-DK', nb: 'nb-NO', sv: 'sv-SE' })[language];
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'EUR',
   }).format(value);

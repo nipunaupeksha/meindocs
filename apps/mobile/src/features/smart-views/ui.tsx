@@ -54,10 +54,12 @@ export function SmartViewsSection() {
             </Text>
           </View>
           <Button
-            variant="ghost"
+            variant="outline"
+            className="gap-sm rounded-full border-primary bg-transparent px-md"
             onPress={() => router.push({ pathname: '/smart-view', params: { id: view.id } })}
           >
-            <Text>{t('Open', 'Öffnen')}</Text>
+            <Text className="text-sm text-primary">{t('Open', 'Öffnen')}</Text>
+            <Ionicons name="arrow-up-outline" size={14} color="#174A45" style={{ transform: [{ rotate: '45deg' }] }} />
           </Button>
         </Card>
       ))}
@@ -69,8 +71,13 @@ export function SmartViewsSection() {
           )}
         </Text>
       )}
-      <Button variant="outline" onPress={() => router.push('/smart-view')}>
-        <Text>＋ {t('Create Smart View', 'Smart View erstellen')}</Text>
+      <Button
+        variant="outline"
+        className="gap-sm rounded-full border-primary bg-transparent px-md"
+        onPress={() => router.push('/smart-view')}
+      >
+        <Ionicons name="add-outline" size={14} color="#174A45" />
+        <Text className="text-sm text-primary">{t('Create Smart View', 'Smart View erstellen')}</Text>
       </Button>
     </View>
   );

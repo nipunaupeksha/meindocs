@@ -8,19 +8,24 @@ type AppHeaderProps = {
   subtitle?: string;
   leading?: ReactNode;
   trailing?: ReactNode;
+  className?: string;
 };
 
-export function AppHeader({ title, subtitle, leading, trailing }: AppHeaderProps) {
+export function AppHeader({ title, subtitle, leading, trailing, className }: AppHeaderProps) {
   return (
-    <View className="flex-row items-center gap-sm">
+    <View className={`flex-row items-center gap-sm ${className ?? ''}`}>
       {leading}
 
       <View className="min-w-0 flex-1 gap-xs">
-        <Text accessibilityRole="header" className="font-manrope-bold text-2xl">
+        <Text accessibilityRole="header" variant="h2">
           {title}
         </Text>
 
-        {subtitle ? <Text className="text-sm text-muted-foreground">{subtitle}</Text> : null}
+        {subtitle ? (
+          <Text variant="p" className="text-muted-foreground">
+            {subtitle}
+          </Text>
+        ) : null}
       </View>
 
       {trailing}

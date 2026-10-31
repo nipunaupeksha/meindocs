@@ -5,6 +5,7 @@ import { Card } from '@/components/app/card';
 import { StatusBadge } from '@/components/app/status-badge';
 import { Page } from '@/features/preview/ui';
 import { usePreview } from '@/features/preview/provider';
+import { Icon } from '@/features/preview/ui';
 
 export default function CasesScreen() {
   const { cases, t } = usePreview();
@@ -16,8 +17,9 @@ export default function CasesScreen() {
         'Behalte jeden Verwaltungsprozess im Blick.',
       )}
     >
-      <Button onPress={() => router.push('/cases/create')}>
-        <Text>＋ {t('Create case', 'Fall erstellen')}</Text>
+      <Button variant="outline" className="gap-sm rounded-full border-primary bg-transparent px-md" onPress={() => router.push('/cases/create')}>
+        <Icon name="add-outline" size={14} color="#174A45" />
+        <Text className="text-sm text-primary">{t('Create case', 'Fall erstellen')}</Text>
       </Button>
       {cases.map((item) => (
         <Card key={item.id} className="gap-sm">
@@ -38,9 +40,11 @@ export default function CasesScreen() {
           </Text>
           <Button
             variant="outline"
+            className="gap-sm rounded-full border-primary bg-transparent px-md"
             onPress={() => router.push({ pathname: '/cases/[id]', params: { id: item.id } })}
           >
-            <Text>{t('Open case', 'Fall öffnen')}</Text>
+            <Icon name="open-outline" size={14} color="#174A45" />
+            <Text className="text-sm text-primary">{t('Open case', 'Fall öffnen')}</Text>
           </Button>
         </Card>
       ))}

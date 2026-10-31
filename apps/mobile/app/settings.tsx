@@ -2,10 +2,11 @@ import { Card } from '@/components/app/card';
 import { SectionHeader } from '@/components/app/section-header';
 import { Text } from '@/components/ui/text';
 import { usePreview } from '@/features/preview/provider';
-import { Options, Page, SettingToggle } from '@/features/preview/ui';
+import { Page, SettingToggle } from '@/features/preview/ui';
 import { StorageSettings } from '@/features/preview/storage-settings';
 import { BackupSettings } from '@/features/backup/settings';
 import { SecuritySettings } from '@/features/security/settings';
+import { LanguageSelector } from '@/i18n/ui';
 function Preferences() {
   const { t, settings, setSettings, notify } = usePreview();
   function update(key: 'reminders' | 'wifi' | 'biometric', value: boolean) {
@@ -45,7 +46,7 @@ function Preferences() {
   );
 }
 export default function SettingsScreen() {
-  const { t, language, changeLanguage, toasts, changeToasts } = usePreview();
+  const { t, localeLanguage, changeLanguage, toasts, changeToasts } = usePreview();
   return (
     <Page
       title={t('Make MeinDocs yours.', 'MeinDocs, wie du es magst.')}
@@ -55,13 +56,9 @@ export default function SettingsScreen() {
       )}
     >
       <SectionHeader title={t('Language', 'Sprache')} />
-      <Options
-        value={language}
-        onChange={changeLanguage}
-        options={[
-          { value: 'en', label: 'English' },
-          { value: 'de', label: 'Deutsch' },
-        ]}
+      <LanguageSelector
+        value={localeLanguage}
+        onChange={(value) => changeLanguage(value)}
       />
       <SectionHeader title={t('Notifications', 'Mitteilungen')} />
       <Card>

@@ -14,6 +14,7 @@ import {
   writeSecurityState,
 } from './native';
 import { shouldLock, type AutoLockTimeout, type SecurityState } from './state';
+import type { SupportedLanguage } from '@/i18n/languages';
 
 type SecurityContextValue = {
   state: SecurityState;
@@ -27,7 +28,7 @@ const SecurityContext = createContext<SecurityContextValue | null>(null);
 export function SecurityProvider({ children }: PropsWithChildren) {
   const [state, setStateValue] = useState<SecurityState>({
     onboardingComplete: false,
-    language: 'en',
+    language: 'en' as SupportedLanguage,
     biometricEnabled: false,
     autoLockTimeout: 300_000,
     notificationsSkipped: false,

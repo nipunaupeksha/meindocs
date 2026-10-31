@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { View } from 'react-native';
+import { ImageBackground, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import { Card } from '@/components/app/card';
-import { Icon, Options, Page } from '@/features/preview/ui';
+import { Icon } from '@/features/preview/ui';
 import { useSecurity } from '@/features/security/provider';
 import { authenticateDevice } from '@/features/security/native';
 import { requestReminderPermissions } from '@/features/reminders/notifications';
 import { colors } from '@meindocs/ui';
+import { useTranslation } from 'react-i18next';
+import { useAppLanguage } from '@/i18n/provider';
+import { LanguageSelector } from '@/i18n/ui';
 
 const artwork = [
   { icon: 'documents-outline' as const, accent: colors.primary },
@@ -20,36 +23,45 @@ const artwork = [
 ];
 
 function OnboardingArtwork({ step }: { step: number }) {
+  const { t } = useTranslation();
   const current = artwork[step] ?? artwork[0];
   return (
-    <View className="h-56 overflow-hidden rounded-2xl bg-primary-soft p-lg">
-      <View className="absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/60" />
-      <View className="absolute -bottom-16 -left-8 h-40 w-40 rounded-full bg-accent/20" />
-      <View className="flex-1 flex-row items-center justify-between">
-        <View className="h-24 w-24 items-center justify-center rounded-2xl bg-surface shadow-sm">
-          <Icon name="document-text-outline" color={colors.primary} size={42} />
-          <View className="absolute -bottom-2 -right-2 h-10 w-10 items-center justify-center rounded-full bg-surface">
-            <Icon name={current.icon} color={current.accent} size={23} />
+    <View className="flex-1 items-center justify-center">
+      <View className="w-[82%] max-w-sm rounded-3xl border border-white/50 bg-white/35 p-lg shadow-lg">
+        <View className="mb-lg flex-row items-center justify-between">
+          <View className="flex-row items-center gap-sm">
+            <View className="h-11 w-11 items-center justify-center rounded-2xl border border-white/60 bg-white/45">
+              <Icon name="document-text-outline" color={colors.primary} size={25} />
+            </View>
+            <View>
+              <Text className="font-manrope-semibold text-foreground">MEINDOCS</Text>
+              <Text className="text-xs text-muted-foreground">{t('brandTagline')}</Text>
+            </View>
+          </View>
+          <View className="h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45">
+            <Icon name={current.icon} color={current.accent} size={21} />
           </View>
         </View>
-        <View className="items-end gap-sm">
-          <View className="h-3 w-20 rounded-full bg-white/80" />
-          <View className="h-3 w-28 rounded-full bg-white/60" />
-          <View className="h-3 w-16 rounded-full bg-white/50" />
+        <View className="gap-sm rounded-2xl border border-white/60 bg-white/55 p-md">
+          <View className="flex-row items-center gap-sm">
+            <View className="h-9 w-9 items-center justify-center rounded-xl bg-white/55">
+              <Icon name={current.icon} color={current.accent} size={20} />
+            </View>
+            <View className="flex-1 gap-xs">
+              <View className="h-2.5 w-2/3 rounded-full bg-primary/35" />
+              <View className="h-2 w-1/2 rounded-full bg-primary/20" />
+            </View>
+            <Icon name="checkmark-circle" color={colors.success} size={20} />
+          </View>
+          <View className="h-px bg-border/80" />
+          <View className="flex-row items-center justify-between">
+            <Text className="text-xs text-muted-foreground">{t('documents')}</Text>
+            <Text className="font-manrope-semibold text-sm text-foreground">{t('safeOrganised')}</Text>
+          </View>
         </View>
-      </View>
-      <View className="flex-row items-center justify-between">
-        <Text className="font-manrope-bold text-lg text-primary">MEINDOCS</Text>
-        <View className="flex-row gap-xs">
+        <View className="mt-lg flex-row justify-center gap-xs">
           {artwork.map((item, index) => (
-            <View
-              key={item.icon}
-              className={
-                index === step
-                  ? 'h-2 w-6 rounded-full bg-primary'
-                  : 'h-2 w-2 rounded-full bg-primary/30'
-              }
-            />
+            <View key={item.icon} className={index === step ? 'h-1.5 w-6 rounded-full bg-primary' : 'h-1.5 w-1.5 rounded-full bg-primary/30'} />
           ))}
         </View>
       </View>
@@ -58,51 +70,14 @@ function OnboardingArtwork({ step }: { step: number }) {
 }
 
 export default function OnboardingScreen() {
-  const { state, setState, refreshBiometrics } = useSecurity();
+  const { t } = useTranslation();
+  const { setState, refreshBiometrics } = useSecurity();
+  const { language, setLanguage } = useAppLanguage();
   const [step, setStep] = useState(0);
-  const [language, setLanguage] = useState<'en' | 'de'>(state.language);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const copy = [
-    [
-      'Welcome to MeinDocs',
-      'Willkommen bei MeinDocs',
-      'Your documents stay on your phone and remain under your control.',
-      'Deine Dokumente bleiben auf deinem Gerät und unter deiner Kontrolle.',
-    ],
-    [
-      'Local-first privacy',
-      'Datenschutz zuerst',
-      'MeinDocs works without an online account. Cloud backup is optional and encrypted.',
-      'MeinDocs funktioniert ohne Online-Konto. Cloud-Backups sind optional und verschlüsselt.',
-    ],
-    [
-      'Choose your language',
-      'Sprache wählen',
-      'You can change this later in Settings.',
-      'Du kannst dies später in den Einstellungen ändern.',
-    ],
-    [
-      'Protect your app',
-      'App schützen',
-      'Use Face ID, Touch ID, or Android biometrics. Your device passcode remains the fallback.',
-      'Nutze Face ID, Touch ID oder Android-Biometrie. Dein Gerätecode bleibt die Alternative.',
-    ],
-    [
-      'Notifications',
-      'Mitteilungen',
-      'Get local reminders for deadlines. You can skip this and enable it later.',
-      'Erhalte lokale Erinnerungen an Fristen. Du kannst dies überspringen.',
-    ],
-    [
-      'Optional Google Drive backup',
-      'Optionales Google-Drive-Backup',
-      'Connect later if you want encrypted backups. MeinDocs remains fully usable offline.',
-      'Verbinde später ein Konto für verschlüsselte Backups. MeinDocs funktioniert vollständig offline.',
-    ],
-  ];
-  const current = copy[step];
+  const stepKeys = ['welcome', 'privacy', 'language', 'protection', 'notifications', 'backup'] as const;
+  const current = stepKeys[step];
   async function next() {
-    if (step === 2) await setState({ language });
     if (step === 3 && biometricAvailable && (await authenticateDevice()))
       await setState({ biometricEnabled: true });
     if (step === 4) {
@@ -126,60 +101,53 @@ export default function OnboardingScreen() {
     setStep((value) => value + 1);
   }
   return (
-    <Page
-      edges={['top', 'left', 'right', 'bottom']}
-      showPreviewNote={false}
-      title={language === 'de' ? current[1] : current[0]}
-      subtitle={language === 'de' ? current[3] : current[2]}
-    >
-      <OnboardingArtwork step={step} />
-      <Card className="gap-sm bg-surface">
-        <View className="flex-row items-center justify-between">
-          <Text className="font-manrope-bold text-xl">
-            {step === 0 ? 'MEINDOCS' : `${step + 1} / ${copy.length}`}
-          </Text>
-          <Icon
-            name={artwork[step]?.icon ?? 'document-text-outline'}
-            color={artwork[step]?.accent ?? colors.primary}
-            size={24}
-          />
+    <SafeAreaView edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-background">
+      <ImageBackground
+        source={require('../assets/images/onboarding-radial.png')}
+        resizeMode="cover"
+        className="flex-1"
+      >
+        <View className="flex-1">
+        <View className="flex-1 px-md">
+          <OnboardingArtwork step={step} />
         </View>
-        <Text className="text-muted-foreground">{language === 'de' ? current[3] : current[2]}</Text>
-      </Card>
-      {step === 2 && (
-        <Options
-          value={language}
-          onChange={setLanguage}
-          options={[
-            { value: 'en', label: 'English' },
-            { value: 'de', label: 'Deutsch' },
-          ]}
-        />
-      )}
-      {step === 3 && (
-        <Button
-          variant="outline"
-          onPress={async () => setBiometricAvailable((await refreshBiometrics()).available)}
-        >
-          <Text>{biometricAvailable ? 'Biometrics available ✓' : 'Enable biometrics'}</Text>
-        </Button>
-      )}
-      <Button onPress={() => void next()}>
-        <Text>
-          {step === 5
-            ? language === 'de'
-              ? 'Fertig'
-              : 'Finish'
-            : language === 'de'
-              ? 'Weiter'
-              : 'Continue'}
-        </Text>
-      </Button>
-      {(step === 4 || step === 5) && (
-        <Button variant="ghost" onPress={() => void skip()}>
-          <Text>{language === 'de' ? 'Überspringen' : 'Skip for now'}</Text>
-        </Button>
-      )}
-    </Page>
+        <View className="gap-md bg-transparent px-lg pb-lg pt-lg">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-xs font-manrope-semibold uppercase tracking-widest text-primary">
+              {step === 0 ? 'MEINDOCS' : `${step + 1} / ${stepKeys.length}`}
+            </Text>
+            <Icon name={artwork[step]?.icon ?? 'document-text-outline'} color={colors.primary} size={22} />
+          </View>
+          <View className="gap-xs">
+            <Text variant="h2" className="text-foreground">
+              {t(`step.${current}.title`)}
+            </Text>
+            <Text className="text-foreground/75">
+              {t(`step.${current}.description`)}
+            </Text>
+          </View>
+          {step === 2 && (
+            <LanguageSelector
+              value={language}
+              onChange={(nextLanguage) => void setLanguage(nextLanguage)}
+            />
+          )}
+          {step === 3 && (
+            <Button variant="outline" className="rounded-full border-primary/20 bg-white/45" onPress={async () => setBiometricAvailable((await refreshBiometrics()).available)}>
+              <Text>{biometricAvailable ? t('biometricsAvailable') : t('enableBiometrics')}</Text>
+            </Button>
+          )}
+          <Button className="rounded-full" onPress={() => void next()}>
+            <Text>{step === stepKeys.length - 1 ? t('finish') : t('continue')}</Text>
+          </Button>
+          {(step === 4 || step === 5) && (
+            <Button variant="ghost" onPress={() => void skip()}>
+              <Text>{t('skip')}</Text>
+            </Button>
+          )}
+        </View>
+        </View>
+      </ImageBackground>
+    </SafeAreaView>
   );
 }

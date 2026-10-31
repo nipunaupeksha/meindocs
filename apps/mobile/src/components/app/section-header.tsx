@@ -1,4 +1,6 @@
 import { View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { colors } from '@meindocs/ui';
 
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -9,6 +11,7 @@ type SectionHeaderProps = {
   action?: {
     label: string;
     onPress: () => void;
+    icon?: 'add-outline' | 'open-outline';
   };
 };
 
@@ -25,12 +28,13 @@ export function SectionHeader({ title, description, action }: SectionHeaderProps
 
       {action ? (
         <Button
-          variant="ghost"
-          className="min-h-12"
+          variant="outline"
+          className="min-h-10 gap-sm rounded-full border-primary bg-transparent px-md py-xs"
           onPress={action.onPress}
           accessibilityLabel={action.label}
         >
-          <Text>{action.label}</Text>
+          <Ionicons name={action.icon ?? 'add-outline'} size={14} color={colors.primary} />
+          <Text className="text-sm text-primary">{action.label}</Text>
         </Button>
       ) : null}
     </View>

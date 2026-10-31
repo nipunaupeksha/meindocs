@@ -42,7 +42,6 @@ export default function EditDocumentScreen() {
         <Text>{t('Save title override', 'Titel speichern')}</Text>
       </Button>
       <CustomFieldsEditor
-        document={document}
         initialValues={customFieldValues[document.id] ?? {}}
         onSave={(values) => {
           saveCustomFieldValues(document.id, values);

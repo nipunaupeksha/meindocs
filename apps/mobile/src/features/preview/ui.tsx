@@ -42,8 +42,8 @@ export function Page({
   showPreviewNote?: boolean;
 }>) {
   return (
-    <Screen scroll edges={edges ?? (tab ? ['top', 'left', 'right'] : ['left', 'right', 'bottom'])}>
-      {title ? <AppHeader title={title} subtitle={subtitle} /> : null}
+    <Screen scroll edges={edges ?? (tab ? ['top', 'left', 'right'] : ['top', 'left', 'right', 'bottom'])}>
+      {title ? <AppHeader title={title} subtitle={subtitle} className="mt-md" /> : null}
       {children}
       {showPreviewNote ? <PreviewNote /> : null}
     </Screen>
@@ -73,14 +73,17 @@ export function Options<T extends string>({
   value,
   options,
   onChange,
+  equalWidth = false,
+  wrap = false,
 }: {
   value: T;
   options: { value: T; label: string }[];
   onChange: (value: T) => void;
+  equalWidth?: boolean;
+  wrap?: boolean;
 }) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      <View className="flex-row gap-sm">
+    <View className={cn('flex-row gap-sm', wrap && 'flex-wrap')}>
         {options.map((option) => (
           <Pressable
             key={option.value}
@@ -88,19 +91,18 @@ export function Options<T extends string>({
             accessibilityState={{ checked: value === option.value }}
             onPress={() => onChange(option.value)}
             className={cn(
-              'min-h-12 justify-center rounded-full border border-border px-md py-sm',
+              `min-h-12 items-center justify-center rounded-full border border-border px-lg py-sm ${equalWidth ? 'flex-1' : ''} ${wrap ? 'w-[48%] flex-grow' : ''}`,
               value === option.value ? 'bg-primary border-primary' : 'bg-surface',
             )}
           >
             <Text
-              className={cn('font-manrope-medium text-sm', value === option.value && 'text-white')}
+              className={cn('text-center font-manrope-medium text-sm', value === option.value && 'text-white')}
             >
               {option.label}
             </Text>
           </Pressable>
         ))}
-      </View>
-    </ScrollView>
+    </View>
   );
 }
 export function Field({ label, ...props }: ComponentProps<typeof TextInput> & { label: string }) {
@@ -156,9 +158,9 @@ export function SettingToggle({
     </View>
   );
 }
-export function InfoRow({ label, value }: { label: string; value: string }) {
+export function InfoRow({ label, value, showSeparator = true }: { label: string; value: string; showSeparator?: boolean }) {
   return (
-    <View className="flex-row flex-wrap justify-between gap-sm border-b border-border py-sm">
+    <View className={cn("flex-row flex-wrap justify-between gap-sm border-border", showSeparator ? "border-b py-sm":"")}>
       <Text className="text-sm text-muted-foreground">{label}</Text>
       <Text className="font-manrope-medium text-sm">{value}</Text>
     </View>
@@ -180,11 +182,11 @@ function documentStatus(document: MockDocument, t: (english: string, german: str
 }
 
 export function DocumentItem({ document }: { document: MockDocument }) {
-  const { language, t } = usePreview();
+  const { language, localeLanguage, t } = usePreview();
   return (
     <DocumentRow
       title={document.title[language]}
-      metadata={`${categories[document.category][language]} · ${formatDate(document.date, language)} · ${document.size}`}
+      metadata={`${categories[document.category][language]} · ${formatDate(document.date, localeLanguage)} · ${document.size}`}
       thumbnail={<DocumentThumbnail document={document} />}
       status={documentStatus(document, t)}
       onPress={() => router.push({ pathname: '/document/[id]', params: { id: document.id } })}
@@ -194,7 +196,7 @@ export function DocumentItem({ document }: { document: MockDocument }) {
 
 // fallow-ignore-next-line complexity
 export function TaskItem({ task }: { task: MockTask }) {
-  const { language, toggleTask, t } = usePreview();
+  const { language, localeLanguage, toggleTask, t } = usePreview();
   const state = reminderState({
     dueDate: task.date,
     expiryDate: task.expiryDate,
@@ -226,9 +228,9 @@ export function TaskItem({ task }: { task: MockTask }) {
             className={cn('text-xs', state === 'overdue' ? 'text-danger' : 'text-muted-foreground')}
           >
             {state === 'overdue' ? `${t('Overdue · ', 'Überfällig · ')}` : ''}
-            {formatDate(task.date, language)}
+            {formatDate(task.date, localeLanguage)}
             {task.expiryDate
-              ? ` · ${t('expires', 'endet')} ${formatDate(task.expiryDate, language)}`
+              ? ` · ${t('expires', 'endet')} ${formatDate(task.expiryDate, localeLanguage)}`
               : ''}
           </Text>
         </View>

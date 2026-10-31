@@ -1,7 +1,9 @@
+import type { SupportedLanguage } from '@/i18n/languages';
+
 export type AutoLockTimeout = 0 | 30_000 | 300_000 | 900_000;
 export type SecurityState = {
   onboardingComplete: boolean;
-  language: 'en' | 'de';
+  language: SupportedLanguage;
   biometricEnabled: boolean;
   autoLockTimeout: AutoLockTimeout;
   notificationsSkipped: boolean;

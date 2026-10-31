@@ -75,6 +75,7 @@ export default function DocumentsScreen() {
           <Text className="font-manrope-semibold">{t('Bulk operations', 'Stapelaktionen')}</Text>
           <Button
             variant="outline"
+            className="min-h-10 rounded-full border-primary bg-transparent px-md"
             onPress={() => {
               setSelectionMode((value) => !value);
               setSelectedIds(new Set());
@@ -88,14 +89,19 @@ export default function DocumentsScreen() {
           <>
             <View className="flex-row gap-xs">
               <Button
-                variant="ghost"
+                variant="outline"
+                className="min-h-10 rounded-full border-primary bg-transparent px-md"
                 onPress={() =>
                   setSelectedIds(new Set(visible.slice(0, 1000).map(({ document }) => document.id)))
                 }
               >
                 <Text>{t('Select all results', 'Alle Ergebnisse auswählen')}</Text>
               </Button>
-              <Button variant="ghost" onPress={() => setSelectedIds(new Set())}>
+              <Button
+                variant="outline"
+                className="min-h-10 rounded-full border-primary bg-transparent px-md"
+                onPress={() => setSelectedIds(new Set())}
+              >
                 <Text>{t('Clear', 'Leeren')}</Text>
               </Button>
             </View>
@@ -115,6 +121,7 @@ export default function DocumentsScreen() {
             >
               <Button
                 variant="outline"
+                className="rounded-full border-primary/50 bg-transparent px-md"
                 disabled={!selectedIds.size || !tagInput.trim()}
                 onPress={() => void applyBulk({ type: 'add_tags', tags: tagInput.split(',') })}
               >
@@ -122,6 +129,7 @@ export default function DocumentsScreen() {
               </Button>
               <Button
                 variant="outline"
+                className="rounded-full border-primary/50 bg-transparent px-md"
                 disabled={!selectedIds.size || !tagInput.trim()}
                 onPress={() => void applyBulk({ type: 'remove_tags', tags: tagInput.split(',') })}
               >
@@ -129,6 +137,7 @@ export default function DocumentsScreen() {
               </Button>
               <Button
                 variant="outline"
+                className="rounded-full border-primary/50 bg-transparent px-md"
                 disabled={!selectedIds.size}
                 onPress={() => void applyBulk({ type: 'mark_tax_relevant', value: true })}
               >
@@ -136,6 +145,7 @@ export default function DocumentsScreen() {
               </Button>
               <Button
                 variant="outline"
+                className="rounded-full border-primary/50 bg-transparent px-md"
                 disabled={!selectedIds.size}
                 onPress={() => void applyBulk({ type: 'assign_tax_year', year: 2026 })}
               >
@@ -143,6 +153,7 @@ export default function DocumentsScreen() {
               </Button>
               <Button
                 variant="outline"
+                className="rounded-full border-primary/50 bg-transparent px-md"
                 disabled={!selectedIds.size || !people[0]}
                 onPress={() =>
                   void applyBulk({ type: 'assign_person', personId: people[0]?.id ?? null })
@@ -152,6 +163,7 @@ export default function DocumentsScreen() {
               </Button>
               <Button
                 variant="outline"
+                className="rounded-full border-primary/50 bg-transparent px-md"
                 disabled={!selectedIds.size || !organisations[0]}
                 onPress={() =>
                   void applyBulk({
@@ -164,6 +176,7 @@ export default function DocumentsScreen() {
               </Button>
               <Button
                 variant="outline"
+                className="rounded-full border-primary/50 bg-transparent px-md"
                 disabled={!selectedIds.size || !cases[0]}
                 onPress={() => void applyBulk({ type: 'add_to_case', caseId: cases[0]?.id ?? '' })}
               >
@@ -171,6 +184,7 @@ export default function DocumentsScreen() {
               </Button>
               <Button
                 variant="outline"
+                className="rounded-full border-primary/50 bg-transparent px-md"
                 disabled={!selectedIds.size}
                 onPress={() => void applyBulk({ type: 'archive' }, true)}
               >
@@ -178,6 +192,7 @@ export default function DocumentsScreen() {
               </Button>
               <Button
                 variant="outline"
+                className="rounded-full border-primary/50 bg-transparent px-md"
                 disabled={!selectedIds.size}
                 onPress={() => void applyBulk({ type: 'delete' }, true)}
               >
@@ -185,6 +200,7 @@ export default function DocumentsScreen() {
               </Button>
               <Button
                 variant="outline"
+                className="rounded-full border-primary/50 bg-transparent px-md"
                 disabled={!selectedIds.size}
                 onPress={() =>
                   router.push({
@@ -225,41 +241,43 @@ export default function DocumentsScreen() {
           />
         </View>
       )}
-      <Options
-        value={filter}
-        onChange={setFilter}
-        options={[
-          { value: 'all', label: t('All', 'Alle') },
-          { value: 'favorites', label: t('Starred', 'Favoriten') },
-          ...Object.entries(categories).map(([value, label]) => ({
-            value: value as Category,
-            label: label[language],
-          })),
-        ]}
-      />
-      <Options
-        value={sort}
-        onChange={setSort}
-        options={[
-          { value: 'relevance', label: t('Relevance', 'Relevanz') },
-          { value: 'newest', label: t('Newest', 'Neueste') },
-          { value: 'oldest', label: t('Oldest', 'Älteste') },
-          { value: 'expiry', label: t('Expiry', 'Ablauf') },
-          { value: 'due', label: t('Due date', 'Fälligkeit') },
-        ]}
-      />
-      <Options
-        value={taxOnly ? 'tax' : actionOnly ? 'actions' : 'none'}
-        onChange={(value) => {
-          setTaxOnly(value === 'tax');
-          setActionOnly(value === 'actions');
-        }}
-        options={[
-          { value: 'none', label: t('All filters', 'Alle Filter') },
-          { value: 'tax', label: t('Tax relevant', 'Steuerlich relevant') },
-          { value: 'actions', label: t('Action required', 'Aktion nötig') },
-        ]}
-      />
+      <View className="gap-sm">
+        <Options
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: t('All', 'Alle') },
+            { value: 'favorites', label: t('Starred', 'Favoriten') },
+            ...Object.entries(categories).map(([value, label]) => ({
+              value: value as Category,
+              label: label[language],
+            })),
+          ]}
+        />
+        <Options
+          value={sort}
+          onChange={setSort}
+          options={[
+            { value: 'relevance', label: t('Relevance', 'Relevanz') },
+            { value: 'newest', label: t('Newest', 'Neueste') },
+            { value: 'oldest', label: t('Oldest', 'Älteste') },
+            { value: 'expiry', label: t('Expiry', 'Ablauf') },
+            { value: 'due', label: t('Due date', 'Fälligkeit') },
+          ]}
+        />
+        <Options
+          value={taxOnly ? 'tax' : actionOnly ? 'actions' : 'none'}
+          onChange={(value) => {
+            setTaxOnly(value === 'tax');
+            setActionOnly(value === 'actions');
+          }}
+          options={[
+            { value: 'none', label: t('All filters', 'Alle Filter') },
+            { value: 'tax', label: t('Tax relevant', 'Steuerlich relevant') },
+            { value: 'actions', label: t('Action required', 'Aktion nötig') },
+          ]}
+        />
+      </View>
       <Button onPress={() => router.push('/add-document')}>
         <Text>＋ {t('Add document', 'Dokument hinzufügen')}</Text>
       </Button>

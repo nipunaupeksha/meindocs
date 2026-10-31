@@ -1,5 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@meindocs/ui';
+import type { SupportedLanguage } from '@/i18n/languages';
+import { useAppLanguage } from '@/i18n/provider';
 import {
   BulkDocumentService,
   bulkResultMessage,
@@ -82,8 +84,11 @@ function samplePreviewDocument(id: string) {
   };
 }
 
-function usePreviewState() {
-  const [language, setLanguage] = useState<Language>('en');
+function usePreviewState(
+  localeLanguage: SupportedLanguage,
+  setAppLanguage: (language: SupportedLanguage) => Promise<void>,
+) {
+  const language: Language = localeLanguage === 'de' ? 'de' : 'en';
   const [toasts, setToasts] = useState(true);
   const [settings, setSettings] = useState({
     reminders: true,
@@ -151,12 +156,17 @@ function usePreviewState() {
     setCustomFieldValues((current) => ({ ...current, [documentId]: values }));
     notify('Custom fields updated', 'Benutzerdefinierte Felder aktualisiert');
   }
-  function changeLanguage(value: Language) {
-    setLanguage(value);
+  function changeLanguage(value: SupportedLanguage) {
+    void setAppLanguage(value);
     if (toasts)
       setToast({
         id: ++sequence.current,
-        title: value === 'de' ? 'Sprache auf Deutsch geändert' : 'Language changed to English',
+        title:
+          value === 'de'
+            ? 'Sprache auf Deutsch geändert'
+            : value === 'en'
+              ? 'Language changed to English'
+              : 'Language preference saved',
       });
   }
   function changeToasts(value: boolean) {
@@ -179,6 +189,16 @@ function usePreviewState() {
     await repositories.documentRepository.update(id, patch);
     setDocuments(await repositories.documentRepository.list());
     notify('Document updated', 'Dokument aktualisiert');
+  }
+  async function deleteDocument(id: string) {
+    await repositories.documentRepository.delete?.(id);
+    setDocuments(await repositories.documentRepository.list());
+    setCustomFieldValues((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+    notify('Document deleted', 'Dokument gelöscht');
   }
   async function bulkUpdateDocuments(
     documentIds: readonly string[],
@@ -404,6 +424,7 @@ function usePreviewState() {
   }
   return {
     language,
+    localeLanguage,
     t,
     changeLanguage,
     toasts,
@@ -434,6 +455,7 @@ function usePreviewState() {
     tasks,
     dashboard,
     updateDocument,
+    deleteDocument,
     bulkUpdateDocuments,
     toggleTask,
     addTask,
@@ -450,7 +472,8 @@ export function usePreview() {
   return value;
 }
 export function PreviewProvider({ children }: PropsWithChildren) {
-  const value = usePreviewState();
+  const { language, setLanguage } = useAppLanguage();
+  const value = usePreviewState(language, setLanguage);
   return (
     <PreviewContext.Provider value={value}>
       {children}

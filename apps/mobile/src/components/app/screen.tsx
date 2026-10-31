@@ -27,6 +27,7 @@ export function Screen({
     >
       {scroll ? (
         <ScrollView
+          className="flex-1"
           contentContainerStyle={{
             flexGrow: 1,
             padding: spacing.md,
@@ -34,7 +35,7 @@ export function Screen({
           automaticallyAdjustKeyboardInsets
           keyboardShouldPersistTaps="handled"
         >
-          <View className={cn('gap-lg', className)}>{children}</View>
+          <View className={cn('min-h-full w-full flex-grow gap-lg', className)}>{children}</View>
         </ScrollView>
       ) : (
         <View className={cn('flex-1 gap-lg p-md', className)}>{children}</View>

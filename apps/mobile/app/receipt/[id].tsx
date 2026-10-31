@@ -29,7 +29,7 @@ export default function ReceiptDetailScreen() {
   return <DetailContent receipt={receipt} amount={receipt.amount ?? 0} />;
 }
 function DetailContent({ receipt, amount }: { receipt: MockDocument; amount: number }) {
-  const { t, language, updateDocument } = usePreview();
+  const { t, language, localeLanguage, updateDocument } = usePreview();
   return (
     <Page title={receipt.issuer} subtitle={receipt.title[language]}>
       <StatusBadge
@@ -45,8 +45,8 @@ function DetailContent({ receipt, amount }: { receipt: MockDocument; amount: num
       <SectionHeader title={t('Receipt details', 'Belegdetails')} />
       <Card>
         <InfoRow label={t('Merchant', 'Händler')} value={receipt.issuer} />
-        <InfoRow label={t('Date', 'Datum')} value={formatDate(receipt.date, language)} />
-        <InfoRow label={t('Total', 'Gesamtbetrag')} value={money(amount, language)} />
+        <InfoRow label={t('Date', 'Datum')} value={formatDate(receipt.date, localeLanguage)} />
+        <InfoRow label={t('Total', 'Gesamtbetrag')} value={money(amount, localeLanguage)} />
         <InfoRow label={t('Tax year', 'Steuerjahr')} value="2026" />
         <InfoRow
           label={t('Category', 'Kategorie')}

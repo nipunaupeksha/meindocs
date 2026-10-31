@@ -60,6 +60,7 @@ export default function HomeScreen() {
         title={t('Needs attention', 'Aufmerksamkeit nötig')}
         action={{
           label: t('All tasks', 'Alle Aufgaben'),
+          icon: 'open-outline',
           onPress: () => router.navigate('/(tabs)/tasks'),
         }}
       />
@@ -108,6 +109,7 @@ export default function HomeScreen() {
         title={t('Recently added', 'Zuletzt hinzugefügt')}
         action={{
           label: t('View all', 'Alle ansehen'),
+          icon: 'open-outline',
           onPress: () => router.navigate('/(tabs)/documents'),
         }}
       />
@@ -131,6 +133,7 @@ export default function HomeScreen() {
         title={t('Tax', 'Steuern')}
         action={{
           label: t('Open tax', 'Steuern öffnen'),
+          icon: 'open-outline',
           onPress: () => router.navigate('/(tabs)/tax'),
         }}
       />
@@ -147,7 +150,7 @@ export default function HomeScreen() {
       </Card>
       <SectionHeader
         title={t('Active cases', 'Aktive Fälle')}
-        action={{ label: t('View cases', 'Fälle öffnen'), onPress: () => router.push('/cases') }}
+        action={{ label: t('View cases', 'Fälle öffnen'), icon: 'open-outline', onPress: () => router.push('/cases') }}
       />
       {activeCases.map((item) => (
         <Card key={item.id}>

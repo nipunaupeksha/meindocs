@@ -1,81 +1,87 @@
-import { useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
-import {
-  CustomFieldType,
-  definitionAppliesToDocument,
-  DocumentDomain,
-  DocumentType,
-  predefinedCustomFieldDefinitions,
-  validateCustomFieldValue,
-  type CustomFieldDefinition,
-  type CustomFieldValueData,
-} from '@meindocs/domain';
+import { useState } from 'react';
+import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import type { CustomFieldValueData } from '@meindocs/domain';
 import { colors } from '@meindocs/ui';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { Card } from '@/components/app/card';
-import { Field, Icon, Options } from '@/features/preview/ui';
-import type { MockDocument } from '@/features/preview/data';
+import { Field, Icon } from '@/features/preview/ui';
 
-function definitionsFor(document: MockDocument) {
-  const domain =
-    document.category === 'insurance'
-      ? DocumentDomain.Insurance
-      : document.category === 'home'
-        ? DocumentDomain.Housing
-        : document.category === 'work'
-          ? DocumentDomain.Employment
-          : document.category === 'tax'
-            ? DocumentDomain.Tax
-            : DocumentDomain.General;
-  const type = document.category === 'tax' ? DocumentType.Receipt : DocumentType.Other;
-  return predefinedCustomFieldDefinitions.filter((definition) =>
-    definitionAppliesToDocument(definition, { domain, type }),
-  );
-}
-
-function displayValue(value: CustomFieldValueData | undefined) {
+function displayValue(value: CustomFieldValueData) {
   if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  return value === undefined ? 'Not set' : String(value);
+  return String(value);
 }
 
 export function CustomFieldsSection({
-  document,
   values,
+  onAdd,
   onEdit,
+  onDelete,
 }: {
-  document: MockDocument;
   values: Record<string, CustomFieldValueData>;
-  onEdit: () => void;
+  onAdd: () => void;
+  onEdit: (key: string) => void;
+  onDelete: (key: string) => void;
 }) {
-  const definitions = definitionsFor(document);
+  const { width } = useWindowDimensions();
+  const entries = Object.entries(values);
   return (
     <View className="gap-sm">
       <View className="flex-row items-center justify-between">
         <Text className="font-manrope-semibold text-lg">Custom Fields</Text>
-        <Button variant="ghost" size="sm" onPress={onEdit}>
-          <Text>Edit</Text>
+        <Button
+          variant="outline"
+          size="icon"
+          accessibilityLabel="Add custom field"
+          className="h-10 w-10 min-h-10 min-w-10 border-0 bg-transparent p-0"
+          onPress={onAdd}
+        >
+          <Icon name="add-outline" color={colors.primary} size={14} />
         </Button>
       </View>
       <Card>
-        {definitions.length ? (
-          definitions.map((definition) => (
-            <View
-              key={definition.id}
-              className="flex-row items-center gap-sm border-b border-border py-sm"
+        {entries.length ? (
+          entries.map(([key, value]) => (
+            <ScrollView
+              key={key}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              decelerationRate="fast"
+              contentContainerStyle={{ alignItems: 'center' }}
             >
-              <Icon name="pricetag-outline" color={colors.muted} size={18} />
-              <Text className="flex-1 text-sm text-muted-foreground">{definition.name}</Text>
-              <Text className="max-w-[52%] text-right font-manrope-medium text-sm">
-                {displayValue(values[definition.id])}
-              </Text>
-            </View>
+              <View
+                style={{ width: width - 112 }}
+                className="flex-row items-center gap-sm border-b border-border py-sm"
+              >
+                <Icon name="pricetag-outline" color={colors.muted} size={18} />
+                <Text numberOfLines={1} className="min-w-0 flex-1 text-sm text-muted-foreground">
+                  {key}
+                </Text>
+                <Text numberOfLines={2} className="max-w-[52%] text-right font-manrope-medium text-sm">
+                  {displayValue(value)}
+                </Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Edit ${key}`}
+                onPress={() => onEdit(key)}
+                className="h-11 w-11 items-center justify-center rounded-full bg-primary-soft"
+              >
+                <Icon name="pencil-outline" color={colors.primary} size={18} />
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Delete ${key}`}
+                onPress={() => onDelete(key)}
+                className="h-11 w-11 items-center justify-center rounded-full bg-danger/10"
+              >
+                <Icon name="trash-outline" color={colors.danger} size={18} />
+              </Pressable>
+            </ScrollView>
           ))
         ) : (
-          <Text className="text-sm text-muted-foreground">
-            No custom fields apply to this document.
-          </Text>
+          <Text className="text-sm text-muted-foreground">No custom fields added yet.</Text>
         )}
       </Card>
     </View>
@@ -83,110 +89,63 @@ export function CustomFieldsSection({
 }
 
 export function CustomFieldsEditor({
-  document,
   initialValues,
   onSave,
 }: {
-  document: MockDocument;
   initialValues: Record<string, CustomFieldValueData>;
   onSave: (values: Record<string, CustomFieldValueData>) => void;
 }) {
-  const definitions = useMemo(() => definitionsFor(document), [document]);
-  const [draft, setDraft] = useState<Record<string, string | boolean>>(() =>
-    Object.fromEntries(
-      definitions.map((definition) => [
-        definition.id,
-        (() => {
-          const value = initialValues[definition.id];
-          return Array.isArray(value)
-            ? value.join(', ')
-            : typeof value === 'number'
-              ? String(value)
-              : (value ?? '');
-        })(),
-      ]),
-    ),
+  const [draft, setDraft] = useState(() =>
+    Object.entries(initialValues).map(([key, value]) => ({ key, value: displayValue(value) })),
   );
-  const [error, setError] = useState<string | null>(null);
+
+  function updateRow(index: number, patch: Partial<(typeof draft)[number]>) {
+    setDraft((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, ...patch } : row));
+  }
+
   function save() {
     const next: Record<string, CustomFieldValueData> = {};
-    for (const definition of definitions) {
-      const raw = draft[definition.id];
-      const value =
-        definition.type === CustomFieldType.Number || definition.type === CustomFieldType.Currency
-          ? raw === ''
-            ? ''
-            : Number(raw)
-          : definition.type === CustomFieldType.Boolean
-            ? Boolean(raw)
-            : definition.type === CustomFieldType.MultiSelect
-              ? String(raw ?? '')
-                  .split(',')
-                  .map((item) => item.trim())
-                  .filter(Boolean)
-              : raw;
-      const validation = validateCustomFieldValue(definition as CustomFieldDefinition, value);
-      if (validation) {
-        setError(validation);
-        return;
-      }
-      if (value !== '') next[definition.id] = value as CustomFieldValueData;
+    for (const row of draft) {
+      const key = row.key.trim();
+      const value = row.value.trim();
+      if (key && value) next[key] = value;
     }
-    setError(null);
     onSave(next);
   }
+
   return (
     <View className="gap-md">
-      {definitions.map((definition) => {
-        if (definition.type === CustomFieldType.Boolean)
-          return (
-            <Pressable
-              key={definition.id}
-              onPress={() =>
-                setDraft((current) => ({ ...current, [definition.id]: !current[definition.id] }))
-              }
-            >
-              <Card className="flex-row items-center gap-sm">
-                <Icon
-                  name={draft[definition.id] ? 'checkbox' : 'square-outline'}
-                  color={colors.primary}
-                />
-                <Text>{definition.name}</Text>
-              </Card>
-            </Pressable>
-          );
-        if (definition.type === CustomFieldType.Select)
-          return (
-            <View key={definition.id} className="gap-sm">
-              <Text className="font-manrope-medium">{definition.name}</Text>
-              <Options
-                value={String(draft[definition.id] ?? '')}
-                onChange={(value) =>
-                  setDraft((current) => ({ ...current, [definition.id]: value }))
-                }
-                options={(definition.options ?? []).map((value) => ({ value, label: value }))}
-              />
-            </View>
-          );
-        return (
+      {draft.map((row, index) => (
+        <Card key={`${index}-${row.key}`} className="gap-sm">
           <Field
-            key={definition.id}
-            label={definition.name}
-            value={String(draft[definition.id] ?? '')}
-            onChangeText={(value) =>
-              setDraft((current) => ({ ...current, [definition.id]: value }))
-            }
-            keyboardType={
-              definition.type === CustomFieldType.Number ||
-              definition.type === CustomFieldType.Currency
-                ? 'decimal-pad'
-                : 'default'
-            }
-            autoCapitalize={definition.type === CustomFieldType.Email ? 'none' : 'sentences'}
+            label="Field name"
+            value={row.key}
+            onChangeText={(key) => updateRow(index, { key })}
+            placeholder="e.g. Policy ID"
           />
-        );
-      })}
-      {error ? <Text className="text-sm text-danger">{error}</Text> : null}
+          <Field
+            label="Value"
+            value={row.value}
+            onChangeText={(value) => updateRow(index, { value })}
+          />
+          <Button
+            variant="ghost"
+            className="self-end"
+            onPress={() => setDraft((current) => current.filter((_, rowIndex) => rowIndex !== index))}
+          >
+            <Icon name="trash-outline" color={colors.danger} size={16} />
+            <Text className="text-sm text-danger">Remove</Text>
+          </Button>
+        </Card>
+      ))}
+      <Button
+        variant="outline"
+        className="gap-sm rounded-full border-primary bg-transparent px-md"
+        onPress={() => setDraft((current) => [...current, { key: '', value: '' }])}
+      >
+        <Icon name="add-outline" color={colors.primary} size={14} />
+        <Text className="text-sm text-primary">Add field</Text>
+      </Button>
       <Button onPress={save}>
         <Text>Save custom fields</Text>
       </Button>
